@@ -3,7 +3,7 @@
 -- El carrito se guarda por usuario y requiere autenticación TOTP (AAL2).
 create table if not exists public.cart_items (
   user_id uuid not null references auth.users(id) on delete cascade,
-  product_id integer not null check (product_id between 1 and 50),
+  product_id integer not null check (product_id >= 1),
   quantity integer not null check (quantity between 1 and 99),
   updated_at timestamptz not null default now(),
   primary key (user_id, product_id)
