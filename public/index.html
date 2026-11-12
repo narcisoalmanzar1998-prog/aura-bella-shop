@@ -40,4 +40,4 @@ function closeFicha(){$('overlay').classList.remove('open');document.body.style.
 ['q','cat','aud','order'].forEach(x=>$(x).addEventListener(x==='q'?'input':'change',render));
 $('cards').addEventListener('click',e=>{const b=e.target.closest('[data-ficha]');if(b)openFicha(Number(b.dataset.ficha))});
 $('close').addEventListener('click',closeFicha);$('overlay').addEventListener('click',e=>{if(e.target===$('overlay'))closeFicha()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeFicha()});render();
-</script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="auth-config.js"></script><script src="shop.js"></script><script src="auth.js"></script></body></html>
+</script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="auth-config.js"></script><script src="shop.js"></script><script src="auth.js?v=otp8-20261112"></script></body></html>
