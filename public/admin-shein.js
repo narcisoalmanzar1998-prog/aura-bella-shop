@@ -501,7 +501,7 @@
   const shipping=Number($("shippingInput").value);
   const days=Number($("leadInput").value);
   if(!$("settingsForm").checkValidity()||
-      !Number.isFinite(rate)||rate<1||rate>500||Math.round(rate*100)!==rate*100||
+      !Number.isFinite(rate)||rate<1||rate>500||Math.abs(rate*100-Math.round(rate*100))>0.000001||
       !Number.isInteger(margin)||margin<0||margin>100000||
       !Number.isInteger(shipping)||shipping<0||shipping>100000||
       !Number.isInteger(days)||days<1||days>90){
