@@ -97,6 +97,12 @@
     await openCart();
   }
   document.addEventListener("click",e=>{
+    const directPerfume=e.target.closest("a[data-perfume-order]");
+    if(directPerfume&&window.auraApparel?.orderPerfume){
+      const p=byId.get(Number(directPerfume.dataset.perfumeOrder));
+      if(p){e.preventDefault();window.auraApparel.orderPerfume(p);}
+      return;
+    }
     const add=e.target.closest("[data-add]");if(add){addProductClicked(add);return;}
     if(e.target.closest("#cartToggle")){openCart();return;}
     if(e.target.closest("[data-checkout-clothing-cart]")||e.target.closest("[data-checkout-perfume-cart]")){window.auraApparel?.checkoutCart?.(items());return;}
