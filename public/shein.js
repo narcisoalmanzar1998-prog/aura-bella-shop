@@ -102,6 +102,7 @@
     '<div class="grand-total"><span>Total ropa + envío</span><strong>'+money(products+shipping)+'</strong></div></div></section>';
  }
  function message(things,perfumes){
+   const deliveryDays=Number(things[0]?.row?.lead_days||17);
    const text=["¡Hola, Aura Bella Shop! ✨","","Quiero realizar un pedido:",""];
    let productTotal=0,shipTotal=0,count=0;
    for(const {row:r,quantity:q} of things){
@@ -125,7 +126,7 @@
      "🚚 Envío SHEIN ("+count+" unidades): "+money(shipTotal),
      "💳 Total"+(pending?" parcial":"")+" a pagar: "+money(productTotal+shipTotal+perfumeTotal),
      "",
-     "📦 He leído y acepto el plazo estimado de entrega de 17 días y el costo de envío indicado.",
+     "📦 He leído y acepto el plazo estimado de entrega de "+deliveryDays+" días y el costo de envío indicado.",
      "",
      "¡Me gustaría confirmar mi pedido!");
    return text.join("\n");
@@ -137,12 +138,12 @@
   '<h2 id="sheinConsentTitle">📦 INFORMACIÓN IMPORTANTE SOBRE TU PEDIDO</h2>'+
   '<p>¡Gracias por elegir Aura Bella Shop! ✨</p>'+
   '<p>Nuestros productos SHEIN provienen directamente de los Estados Unidos. 🇺🇸</p>'+
-  '<p>Por este motivo, contamos con un tiempo estimado de entrega de <b>17 días</b>, durante el cual recibimos, preparamos, empaquetamos y coordinamos la entrega de tu pedido.</p>'+
+  '<p>Por este motivo, contamos con un tiempo estimado de entrega de <b><span id="sheinConsentDays">17</span> días</b>, durante el cual recibimos, preparamos, empaquetamos y coordinamos la entrega de tu pedido.</p>'+
   '<p>🚚 <b>Costo de envío: <span id="sheinConsentShipping">RD$100</span> por producto.</b> El cargo se aplica por unidad, sin descuentos automáticos.</p>'+
   '<p>Agradecemos tu confianza y comprensión.</p>'+
   '<p><b>Aura Bella Shop — Elegancia en cada detalle. ✨</b></p>'+
   '<div id="sheinConsentSummary" class="shein-summary"></div>'+
-  '<label class="shein-check-row"><input type="checkbox" id="sheinAccept"><span>He leído y acepto el plazo estimado de entrega de 17 días y el costo de envío indicado de <span id="sheinConsentShippingCheck">RD$100</span> por cada unidad SHEIN.</span></label>'+
+  '<label class="shein-check-row"><input type="checkbox" id="sheinAccept"><span>He leído y acepto el plazo estimado de entrega de <span id="sheinConsentDaysCheck">17</span> días y el costo de envío indicado de <span id="sheinConsentShippingCheck">RD$100</span> por cada unidad SHEIN.</span></label>'+
   '<div class="shein-dialog-actions"><button type="button" class="shein-back" data-shein-back>Volver a la tienda</button>'+
   '<button type="button" class="shein-confirm" id="sheinGoWhatsapp" disabled>Aceptar y continuar a WhatsApp</button></div></section>';
  document.body.appendChild(consent);
@@ -160,6 +161,9 @@
    const pricePerf=perfumes.reduce((n,i)=>n+(i.p.price||0)*i.quantity,0);
    const count=things.reduce((n,i)=>n+i.quantity,0);
    const unitShip=things[0].row.shipping_rd;
+   const deliveryDays=Number(things[0].row.lead_days||17);
+   document.getElementById("sheinConsentDays").textContent=String(deliveryDays);
+   document.getElementById("sheinConsentDaysCheck").textContent=String(deliveryDays);
    document.getElementById("sheinConsentShipping").textContent=money(unitShip);
    document.getElementById("sheinConsentShippingCheck").textContent=money(unitShip);
    const summary=document.getElementById("sheinConsentSummary");
@@ -185,7 +189,7 @@
   const received=[];let from=0;
   while(true){
    const {data,error}=await client.from("shein_products")
-     .select("sku,source_product_id,category,title,brand,description,color,size,image_url,image_urls,unit_price_rd,shipping_rd,total_rd,verified_at")
+     .select("sku,source_product_id,category,title,brand,description,color,size,image_url,image_urls,unit_price_rd,shipping_rd,total_rd,lead_days,verified_at")
      .order("source_product_id").order("sku").range(from,from+499);
    if(error)throw error;
    received.push(...(data||[]));
