@@ -44,7 +44,7 @@
  }
  function closeAccount(){panel.classList.remove("is-open");panel.setAttribute("aria-hidden","true");document.body.style.overflow="";openedFrom?.focus?.();}
  async function requireAccount(){if(user&&aal2)return true;openAccount();return false;}
- function notifyCart(){window.auraShop?.setSession?.(user&&aal2?user:null, user&&aal2?client:null);}
+ function notifyCart(){const confirmed=user&&aal2?user:null;const secured=user&&aal2?client:null;window.auraShop?.setSession?.(confirmed,secured);window.auraApparel?.setSession?.(confirmed,secured);}
  async function refresh(){
    if(!client)return;
    const id=++refreshSeq;
