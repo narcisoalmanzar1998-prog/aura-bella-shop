@@ -51,6 +51,11 @@
   .admin-photo-tile button{width:100%;font-size:11px;padding:8px 5px;margin-top:7px;border:1px solid #a88a59;background:#fff;color:#292019}
   .admin-photo-count{font-size:12px;color:#6c593c}
   .admin-photo-gallery:empty{display:none}
+  .admin-row-actions{display:flex;align-items:center;flex-wrap:wrap;gap:7px;min-width:180px}
+  .admin-row-actions button{white-space:nowrap}
+  button.admin-danger{color:#922720!important;border:1px solid #bc786e!important;background:#fff!important}
+  button.admin-danger:hover,button.admin-danger:focus-visible{background:#fff0ed!important}
+  .admin-row-actions a{font-size:12px;color:#66502c;text-decoration:underline}
   .foot{font-size:11px;color:#8b816f;text-align:center;padding:20px}
   @media(max-width:850px){.fields{grid-template-columns:repeat(2,minmax(0,1fr))}.tiles{grid-template-columns:1fr 1fr}}
   @media(max-width:550px){h1{font-size:34px}.head{padding:12px}.brand{font-size:11px}.brand img{width:40px;height:40px}.fields,.checks,.tiles{grid-template-columns:1fr}.card{padding:17px}main{padding:20px 12px 50px}}
@@ -71,8 +76,8 @@
   </div>
   <p class="status" id="adminStatus" role="status" aria-live="polite"></p>
   <section class="card" aria-labelledby="pendingSheinTitle">
-   <h2 id="pendingSheinTitle">Enlaces SHEIN pendientes de verificar</h2>
-   <p>Revisa los productos y pulsa <b>Verificar y publicar</b> para completar el formulario. Solo se publicarán las variantes con precio original tachado comprobado, derechos de imagen, disponibilidad, ruta de entrega y plazo confirmados.</p>
+   <h2 id="pendingSheinTitle">Enlaces SHEIN pendientes y en revisión</h2>
+   <p>Desde esta lista puedes <b>editar</b> una referencia o <b>eliminarla</b> definitivamente. Si el producto ya tiene una variante en el inventario, elimina primero esa variante desde el apartado inferior. Las fotografías que guardaste para revisión permanecen privadas hasta que autorices su publicación.</p>
    <p class="hint">Puedes seleccionar <strong>varias fotografías a la vez</strong> desde tu celular (máximo 12 por producto). Se guardan en revisión privada y <strong>no se publican automáticamente</strong>.</p><input id="sheinReviewFile" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden aria-label="Seleccionar foto de revisión"><div id="sheinReviewPreview" class="admin-photo-gallery" aria-live="polite" style="margin:14px 0"></div><div class="table-scroll"><table><thead><tr><th>ID SHEIN</th><th>Marca / artículo</th><th>Categoría</th><th>Precio original</th><th>Total estimado</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="pendingSheinRows"><tr><td colspan="7">Cargando pendientes…</td></tr></tbody></table></div>
   </section>
   <section class="card" id="manualProductSection" aria-labelledby="manualTitle">
@@ -130,7 +135,7 @@
    <div class="buttons"><button id="csvImport" type="button" disabled>Importar y sincronizar variantes</button></div>
   </section>
   <section class="card" aria-labelledby="inventoryTitle">
-   <h2 id="inventoryTitle">Inventario y precios privados</h2>
+   <h2 id="inventoryTitle">Inventario, publicación y eliminación</h2><p class="hint">«Activar en inventario» no equivale a publicar. Usa <b>Autorizar fotos y publicar</b> para convertir las imágenes ya guardadas en fotos públicas con tu permiso y comprobar el precio y la talla. «Eliminar producto» borra definitivamente la variante del inventario, de la tienda y de los carritos de clientes. El sistema solicitará que escribas el SKU para confirmar.</p>
    <div class="row">
     <label class="field">Buscar SKU, producto o variante<input id="inventorySearch" placeholder="Filtrar inventario…"></label>
     <div class="buttons"><button id="refreshInventory" type="button" class="light">Actualizar inventario</button><button id="exportInventory" type="button" class="light">Exportar inventario CSV privado</button></div>
@@ -143,6 +148,6 @@
 <div class="foot">AURA BELLA SHOP · COSTOS Y MÁRGENES PRIVADOS · NUNCA PUBLICAR CREDENCIALES</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/auth-config.js"></script>
-<script src="/admin-shein.js?v=shein11"></script>
+<script src="/admin-shein.js?v=shein12"></script>
 </body>
 </html>
