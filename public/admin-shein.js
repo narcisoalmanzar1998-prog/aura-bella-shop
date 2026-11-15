@@ -8,7 +8,7 @@
  const categories={hombre:"Hombre",mujer:"Mujer",ninos:"Niños"};
  const fields=["sku","source_product_id","category","title","brand","description","color","size","cost_usd","source_url","image_url","available","enabled","source_authorized","image_rights_ok","via_usa_confirmed","eta_17_confirmed","verified_at"];
  const flags=["available","enabled","source_authorized","image_rights_ok","via_usa_confirmed","eta_17_confirmed"];
- let inventory=[],settings={exchange_rate:65,margin_rd:1000,shipping_rd:100,lead_days:17},incoming=[],busy=false,pendingList=[],selectedPendingId=null,selectedPhotoId=null;
+ let inventory=[],settings={exchange_rate:65,margin_rd:1000,shipping_rd:100,lead_days:17},incoming=[],busy=false,pendingList=[],selectedPendingId=null,selectedPhotoId=null,publishedSkus=new Set();
  function status(message,isError=false){
   const el=$("adminStatus");
   el.textContent=message;el.classList.toggle("error",isError);
@@ -68,10 +68,13 @@
   return lines.slice(1).map(line=>Object.fromEntries(header.map((h,i)=>[h,line[i]??""])));
  }
  const draftStatus=r=>{
-  const flagsOK=r.source_authorized&&r.image_rights_ok&&r.via_usa_confirmed&&r.eta_17_confirmed&&r.available&&r.enabled&&r.image_url;
-  if(!flagsOK)return "Borrador o sin condiciones confirmadas";
-  if(Date.now()-new Date(r.verified_at).valueOf()>14*86400000)return "Oferta antigua: revisar";
-  return "Publicable";
+   if(publishedSkus.has(String(r.sku)))return "Publicado en tienda";
+   if(!r.enabled)return "Desactivado";
+   if(!(r.available&&r.source_authorized&&r.image_rights_ok&&r.via_usa_confirmed&&r.eta_17_confirmed))
+     return "Faltan condiciones de venta";
+   if(!r.image_url)return "Fotos aún privadas";
+   if(Date.now()-new Date(r.verified_at).valueOf()>14*86400000)return "Verificación desactualizada";
+   return "Pendiente de publicar";
  };
  function preview(){
    const target=$("csvPreview");
@@ -86,8 +89,8 @@
  }
  function renderStats(){
    $("adminCount").textContent=String(inventory.length);
-   $("adminReady").textContent=String(inventory.filter(r=>draftStatus(r)==="Publicable").length);
-   $("adminDrafts").textContent=String(inventory.filter(r=>draftStatus(r)!=="Publicable").length);
+   $("adminReady").textContent=String(inventory.filter(r=>publishedSkus.has(String(r.sku))).length);
+   $("adminDrafts").textContent=String(inventory.filter(r=>!publishedSkus.has(String(r.sku))).length);
    $("rateValue").value="RD$"+settings.exchange_rate+" / US$1";
    $("leadValue").textContent=settings.lead_days+" días";
    $("marginInput").value=settings.margin_rd;
@@ -101,11 +104,17 @@
   const head='<tr><th>SKU</th><th>Producto · variante</th><th>Original SHEIN</th><th>Venta</th><th>Envío</th><th>Total</th><th>Estado</th><th>Acción</th></tr>';
   const body=filtered.slice(0,250).map(r=>{
    const sell=Math.round(Number(r.cost_usd)*65+Number(settings.margin_rd));
-   const publish=draftStatus(r)==="Publicable";
+   const publish=publishedSkus.has(String(r.sku));
    return '<tr><td><code>'+esc(r.sku)+'</code></td><td><strong>'+esc(r.brand+' '+r.title)+'</strong><small>'+esc(categories[r.category]+' · '+r.color+' · '+r.size)+'</small></td>'+
     '<td>US$'+esc(r.cost_usd)+'</td><td>'+rd(sell)+'</td><td>'+rd(settings.shipping_rd)+'</td><td><b>'+rd(sell+Number(settings.shipping_rd))+'</b></td>'+
     '<td><span class="'+(publish?"ok":"pending")+'">'+esc(draftStatus(r))+'</span></td>'+
-    '<td><button type="button" data-toggle-sku="'+esc(r.sku)+'" data-activate="'+(r.enabled?"false":"true")+'">'+(r.enabled?"Desactivar":"Activar")+'</button></td></tr>';
+    '<td><div class="admin-row-actions">'+
+  (publish?'<a href="/?sku='+encodeURIComponent(r.sku)+'#ropa-'+esc(r.category)+'" target="_blank" rel="noopener noreferrer">Ver en tienda</a> ':
+    '<button type="button" data-shein-publish="'+esc(r.sku)+'">Autorizar fotos y publicar</button> ')+
+  '<button type="button" data-toggle-sku="'+esc(r.sku)+'" data-activate="'+(r.enabled?"false":"true")+'">'+
+   (r.enabled?"Desactivar":"Activar en inventario")+'</button> '+
+  '<button type="button" class="admin-danger" data-shein-delete-sku="'+esc(r.sku)+'">Eliminar producto</button>'+
+  '</div></td></tr>';
   }).join("");
   table.innerHTML=head+body;
   $("inventoryCount").textContent="Mostrando "+Math.min(filtered.length,250)+" de "+filtered.length+" variantes.";
@@ -115,6 +124,9 @@
   if(error)throw error;
   settings=data.settings||settings;
   inventory=data.items||[];
+  const pub=await client.from("shein_products").select("sku").limit(2000);
+  if(pub.error)throw pub.error;
+  publishedSkus=new Set((pub.data||[]).map(x=>String(x.sku)));
   renderStats();renderInventory();
   const {data:pending,error:pendingError}=await client.rpc("admin_shein_pending");
   pendingList=pendingError?[]:(pending||[]);
@@ -133,7 +145,8 @@
    '<td><button type="button" data-review-pending="'+esc(p.source_product_id)+'">'+(approved?'Agregar variante':'Verificar y publicar')+'</button> '+
    '<button type="button" data-shein-attach-photo="'+esc(p.source_product_id)+'">Adjuntar varias fotos</button> '+
    ((p.review_photo_paths?.length||p.review_photo_path)?'<button type="button" data-shein-see-photo="'+esc(p.source_product_id)+'">Ver '+(p.review_photo_paths?.length||1)+' fotos privadas</button> ':'')+
-   '<a href="'+esc(p.source_url)+'" target="_blank" rel="noopener noreferrer">Ver SHEIN</a></td></tr>';
+   '<a href="'+esc(p.source_url)+'" target="_blank" rel="noopener noreferrer">Ver SHEIN</a> '+
+   '<button type="button" class="admin-danger" data-shein-delete-pending="'+esc(p.source_product_id)+'">Eliminar pendiente</button></td></tr>';
   }).join('');
  }
  async function initial(){
