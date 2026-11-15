@@ -556,14 +556,164 @@
  });
  $("inventorySearch").addEventListener("input",renderInventory);
  $("refreshInventory").addEventListener("click",()=>run(async()=>{}));
+
+ function singleSizeFor(item){
+   let size=String(item.size||"").trim();
+   if(!size||/[;,]/.test(size)){
+     const hint=size.split(/[;,]/).map(x=>x.trim()).filter(Boolean).at(-1)||"";
+     const chosen=window.prompt("Este registro incluye varias tallas juntas: "+size+
+        ". Un SKU corresponde a UNA sola talla. ¿Cuál está disponible para esta variante? "+
+        "Las demás se agregan como variantes separadas:",hint);
+     if(chosen===null)return null;
+     size=String(chosen).trim();
+   }
+   if(!size||size.length>40||!(/^[\p{L}\p{N} .()+/-]+$/u.test(size))){
+     status("Introduce una sola talla válida, por ejemplo: M, XL o XXL.",true);
+     return null;
+   }
+   return size;
+ }
+ async function publishInventory(sku){
+   if(busy||isUploading)return;
+   const item=inventory.find(r=>String(r.sku)===String(sku));
+   if(!item){status("Esta variante no existe en inventario.",true);return;}
+   const p=pendingList.find(r=>String(r.source_product_id)===String(item.source_product_id));
+   if(!p){status("La variante no tiene un enlace SHEIN relacionado. Completa su referencia antes de publicarla.",true);return;}
+   if(![item.available,item.source_authorized,item.image_rights_ok,item.via_usa_confirmed,item.eta_17_confirmed].every(Boolean)){
+     status("Para publicar confirma existencias, permisos comerciales de los datos y fotos, ruta de envío y plazo real. Puedes guardar todo como borrador mientras tanto.",true);
+     return;
+   }
+   if(Date.now()-new Date(item.verified_at).valueOf()>14*86400000){
+      status("El precio o stock se verificó hace más de 14 días. Actualiza la ficha antes de publicar.",true);return;
+   }
+   const original=Number(p.regular_price_usd);
+   if(!Number.isFinite(original)||original<=0){
+     status("Falta el precio original tachado de SHEIN. Abre el formulario del enlace y verifícalo.",true);return;
+   }
+   const review=pathsFor(String(p.source_product_id),"review");
+   const publicPhotos=pathsFor(String(p.source_product_id),"approved");
+   if(!review.length&&!publicPhotos.length){
+      status("No hay imágenes cargadas para este producto. Adjunta tus fotos primero.",true);return;
+   }
+   const size=singleSizeFor(item);
+   if(!size)return;
+   const base=Math.round(original*Number(settings.exchange_rate)+Number(settings.margin_rd));
+   const shipping=Number(settings.shipping_rd);
+   const notice="¿Confirmas que tienes autorización comercial para publicar las imágenes de este artículo, "+
+      "que la disponibilidad, envío desde Estados Unidos y plazo de 17 días son reales? "+
+      "Se publicará UNA variante talla "+size+" usando el precio ORIGINAL TACHADO de US$"+
+      original.toFixed(2)+". Precio de venta "+rd(base)+" + envío "+rd(shipping)+
+      " = "+rd(base+shipping)+". La cifra anterior en inventario era US$"+
+      Number(item.cost_usd).toFixed(2)+". "+
+      (publicPhotos.length?"Se utilizarán las imágenes comerciales autorizadas.":"Se copiarán "+review.length+" fotos privadas a la galería pública.");
+   if(!window.confirm(notice))return;
+   busy=true;
+   try{
+     if(!publicPhotos.length){
+       let count=0;
+       for(const path of review){
+         status("Preparando foto autorizada "+(count+1)+" de "+review.length+"…");
+         const downloaded=await client.storage.from("shein-review").download(path);
+         if(downloaded.error||!downloaded.data)throw downloaded.error||new Error("No se pudo leer la foto "+path);
+         const ext=path.split(".").pop().toLowerCase();
+         const mime=ext==="jpg"||ext==="jpeg"?"image/jpeg":ext==="png"?"image/png":"image/webp";
+         const target=String(p.source_product_id)+"/"+crypto.randomUUID()+"."+ext;
+         const upl=await client.storage.from("shein-approved").upload(target,downloaded.data,{
+           upsert:false,contentType:mime
+         });
+         if(upl.error)throw upl.error;
+         const link=await client.rpc("admin_shein_add_photo",{
+           p_source_product_id:String(p.source_product_id),p_storage_path:target,p_kind:"approved"
+         });
+         if(link.error){
+           await client.storage.from("shein-approved").remove([target]);
+           throw link.error;
+         }
+         count++;
+       }
+     }
+     status("Publicando el producto con su precio original y una talla…");
+     const res=await client.rpc("admin_shein_publish_approved",{p_sku:String(sku),p_single_size:size});
+     if(res.error)throw res.error;
+     await load();
+     if(!publishedSkus.has(String(sku)))throw new Error("Supabase no confirmó que el producto sea visible; comprueba la conexión.");
+     status("¡Producto publicado! SKU "+sku+" · "+rd(base)+" + envío "+rd(shipping)+
+       " = "+rd(base+shipping)+". Ya puedes abrirlo en la tienda.");
+   }catch(err){
+     try{await load()}catch(loadErr){console.warn(loadErr);}
+     status("No se pudo publicar: "+(err.message||"error de conexión")+
+       ". Las fotografías que hayan sido autorizadas se conservan; puedes intentar de nuevo.",true);
+   }finally{busy=false;}
+ }
+ async function deleteInventory(sku){
+   if(busy)return;
+   const item=inventory.find(x=>String(x.sku)===String(sku));
+   if(!item)return;
+   const response=window.prompt("ELIMINACIÓN DEFINITIVA de "+item.brand+" "+item.title+
+      ". Se borrará la variante "+sku+" del inventario y de la tienda y del carrito de clientes. "+
+      "Para confirmar, escribe exactamente el SKU:", "");
+   if(response!==String(sku)){if(response!==null)status("Eliminación cancelada: el SKU no coincidió.",true);return;}
+   busy=true;status("Eliminando variante "+sku+"…");
+   try{
+     const {error}=await client.rpc("admin_shein_delete_sku",{p_sku:String(sku)});
+     if(error)throw error;
+     await load();
+     status("Variante "+sku+" eliminada del inventario y la tienda. Si su enlace sigue pendiente, puedes eliminarlo en la lista superior.");
+   }catch(err){status("No se pudo eliminar: "+(err.message||"error"),true);}
+   finally{busy=false;}
+ }
+ async function deletePending(id){
+   if(busy)return;
+   const p=pendingList.find(x=>String(x.source_product_id)===String(id));
+   if(!p)return;
+   const linked=inventory.filter(x=>String(x.source_product_id)===String(id));
+   if(linked.length){
+     status("Primero elimina "+linked.length+" variante(s) del inventario: "+
+      linked.map(x=>x.sku).join(", ")+". Luego podrás eliminar este enlace pendiente.",true);
+     $("inventoryTable").scrollIntoView({behavior:"smooth",block:"center"});
+     return;
+   }
+   const value=window.prompt("ELIMINACIÓN DEFINITIVA del enlace SHEIN "+id+
+     ". Se borrarán también sus fotos guardadas (privadas y autorizadas) y el borrador. "+
+     "Para confirmar escribe exactamente el ID SHEIN:","");
+   if(value!==String(id)){if(value!==null)status("Eliminación cancelada: el ID no coincidió.",true);return;}
+   busy=true;status("Eliminando enlace pendiente "+id+"…");
+   try{
+     const {data,error}=await client.rpc("admin_shein_delete_pending",{p_source_product_id:String(id)});
+     if(error)throw error;
+     const failed=[];
+     for(const [bucket,paths] of [["shein-review",data?.private_photos],["shein-approved",data?.public_photos]]){
+       if(!Array.isArray(paths)||!paths.length)continue;
+       const result=await client.storage.from(bucket).remove(paths);
+       if(result.error)failed.push(bucket+": "+result.error.message);
+     }
+     if(selectedPendingId===String(id))resetSelection();
+     await load();
+     status(failed.length?
+       "Enlace eliminado de la lista, pero falta limpiar algunos archivos: "+failed.join("; "):
+       "Enlace "+id+" eliminado definitivamente, junto con su borrador y sus fotografías.",failed.length>0);
+   }catch(err){status("No se pudo eliminar el pendiente: "+(err.message||"error"),true);}
+   finally{busy=false;}
+ }
+ $("pendingSheinRows").addEventListener("click",e=>{
+   const button=e.target.closest("[data-shein-delete-pending]");
+   if(button){e.preventDefault();deletePending(button.dataset.sheinDeletePending);}
+ });
+
  $("inventoryTable").addEventListener("click",e=>{
-  const b=e.target.closest("[data-toggle-sku]");if(!b)return;
-  const sku=b.dataset.toggleSku,enable=b.dataset.activate==="true";
-  if(!confirm((enable?"Activar":"Desactivar")+" la variante "+sku+"?"))return;
-  run(async()=>{
-   const {error}=await client.rpc("admin_shein_set_enabled",{p_sku:sku,p_enabled:enable});
-   if(error)throw error;
-  });
+   const del=e.target.closest("[data-shein-delete-sku]");
+   if(del){e.preventDefault();deleteInventory(del.dataset.sheinDeleteSku);return;}
+   const pub=e.target.closest("[data-shein-publish]");
+   if(pub){e.preventDefault();publishInventory(pub.dataset.sheinPublish);return;}
+   const b=e.target.closest("[data-toggle-sku]");
+   if(!b)return;
+   const sku=b.dataset.toggleSku,enable=b.dataset.activate==="true";
+   if(!confirm((enable?"Activar en inventario":"Desactivar")+" la variante "+sku+
+     "? Activar en inventario no publica el producto sin fotos autorizadas."))return;
+   run(async()=>{
+     const {error}=await client.rpc("admin_shein_set_enabled",{p_sku:sku,p_enabled:enable});
+     if(error)throw error;
+   });
  });
  initial();
 })();
