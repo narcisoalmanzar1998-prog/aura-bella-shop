@@ -64,6 +64,7 @@
      if(!target)continue;
      const groups=groupRecords(cat);
      target.classList.toggle("has-items",groups.length>0);
+     section.classList.toggle("has-shein",groups.length>0);
      target.innerHTML=groups.map(card).join("");
      if(empty)empty.hidden=groups.length>0;
      if(status)status.hidden=groups.length>0;
