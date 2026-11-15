@@ -3,6 +3,10 @@
 .apparel-heading{max-width:800px}
 .apparel-card{min-height:275px}
 .apparel-products{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:22px}
+.apparel-card.has-shein{grid-column:1/-1;background:#fff;color:#171511;border-color:#d1bb91;min-height:0}
+.apparel-card.has-shein .apparel-index{color:#906e3a}
+.apparel-card.has-shein h3{margin:18px 0;color:#1f1c16}
+.apparel-card.has-shein .apparel-status,.apparel-card.has-shein .apparel-empty{display:none!important}
 .apparel-card:has(.apparel-products.has-items){grid-column:1/-1;background:#fff;color:#171511;border-color:#d1bb91;min-height:0}
 .apparel-card:has(.apparel-products.has-items) .apparel-index{color:#906e3a}
 .apparel-card:has(.apparel-products.has-items) h3{margin:18px 0;color:#1f1c16}
