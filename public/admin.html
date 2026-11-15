@@ -81,7 +81,7 @@
    <p class="hint">Puedes seleccionar <strong>varias fotografías a la vez</strong> desde tu celular (máximo 12 por producto). Se guardan en revisión privada y <strong>no se publican automáticamente</strong>.</p><input id="sheinReviewFile" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden aria-label="Seleccionar foto de revisión"><div id="sheinReviewPreview" class="admin-photo-gallery" aria-live="polite" style="margin:14px 0"></div><div class="table-scroll"><table><thead><tr><th>ID SHEIN</th><th>Marca / artículo</th><th>Categoría</th><th>Precio original</th><th>Total estimado</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="pendingSheinRows"><tr><td colspan="7">Cargando pendientes…</td></tr></tbody></table></div>
   </section>
   <section class="card" id="manualProductSection" aria-labelledby="manualTitle">
-   <h2 id="manualTitle">Verificar y publicar una variante SHEIN</h2><p class="hint">Esta sección se abre al seleccionar una referencia en la tabla anterior. Puedes guardar el artículo y sus fotos como borrador aunque falten datos. Solo se exigirá completar la información y las verificaciones cuando quieras publicarlo.</p><p id="selectedPending" class="alert" hidden></p>
+   <h2 id="manualTitle">Editar, actualizar o publicar artículos SHEIN</h2><p class="hint">Abre un producto desde «Editar datos» o «Editar / publicar». El botón «Actualizar producto guardado» reemplaza los datos del artículo existente y recalcula sus precios sin crear un duplicado. Conserva las fotos, los SKU y las tallas guardadas. También puedes guardar un borrador aunque falten datos.</p><p id="selectedPending" class="alert" hidden></p>
    <p class="hint">Utiliza únicamente imágenes y datos que estés autorizado a publicar. La clave SKU identifica una variante única (talla + color).</p>
    <p class="hint">Para publicar: pega el enlace SHEIN, introduce el SKU y las tallas, selecciona tus fotos y confirma las casillas. <strong>Un único clic en «Verificar y publicar» subirá las fotos y creará las variantes automáticamente.</strong> No necesitas rellenar manualmente el ID del producto ni copiar enlaces de fotos.</p><form id="skuForm" novalidate><div id="skuFormAlert" role="alert" class="alert" hidden style="margin-bottom:15px;border-left-color:#bb543e"></div>
     <div class="fields">
@@ -106,7 +106,7 @@
      <label><input type="checkbox" id="manual-eta_17_confirmed" name="eta_17_confirmed">Confirmé que el plazo estimado de <span id="leadDaysCheckbox">17</span> días corresponde a la operación real</label>
      <label><input type="checkbox" id="manualVerified">Verifiqué el precio ORIGINAL TACHADO (no el promocional), la talla y la disponibilidad</label>
     </div>
-    <div class="buttons"><button type="button" id="saveSheinDraft" class="light">Guardar borrador y fotos privadas (aunque falten campos)</button><button type="submit">Subir fotos y publicar producto</button><button type="button" class="light" id="clearProductForm">Limpiar formulario</button></div>
+    <div class="buttons"><button type="button" id="saveSheinDraft" class="light">Guardar borrador y fotos privadas</button><button type="button" id="updateSheinSaved">Actualizar producto guardado</button><button type="submit">Subir fotos y publicar nuevas variantes</button><button type="button" class="light" id="clearProductForm">Limpiar formulario</button></div><p class="hint" id="updateSavedHelp">«Actualizar producto guardado» modifica nombre, marca, precio original, categoría, color, descripción y condiciones en las variantes existentes, sin duplicarlas. Las tallas y los SKU ya registrados no se eliminan ni renombran; puedes añadir tallas con «Publicar nuevas variantes» o quitar una variante desde el inventario.</p><p class="status" id="updateSavedResult" role="status" aria-live="polite"></p>
    </form>
   </section>
   <section class="card" aria-labelledby="settingTitle">
@@ -148,6 +148,6 @@
 <div class="foot">AURA BELLA SHOP · COSTOS Y MÁRGENES PRIVADOS · NUNCA PUBLICAR CREDENCIALES</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/auth-config.js"></script>
-<script src="/admin-shein.js?v=shein14"></script>
+<script src="/admin-shein.js?v=shein16"></script>
 </body>
 </html>
