@@ -562,6 +562,75 @@
 
  // The direct-link importer prepares product references. SHEIN prices and photos
  // remain unverified until the administrator supplies authorized information.
+
+ function provisionalNameSpanish(slug,category){
+   // Product links often contain promotional English. Only translate attributes
+   // explicitly present in the slug; an unidentified item remains provisional.
+   const words=String(slug||"").replace(/[-_]+/g," ").replace(/\s+/g," ").toLowerCase().trim();
+   const hit=pattern=>pattern.test(words);
+   let noun="Artículo de moda",female=false,upper=false;
+   if(hit(/\b(cargo pants?|cargo trousers?)\b/))noun="Pantalón cargo";
+   else if(hit(/\b(jeans?|denim pants?|denim trousers?)\b/))noun="Pantalón vaquero";
+   else if(hit(/\b(joggers?|sweatpants?|trousers?|pants?|leggings?)\b/))noun="Pantalón";
+   else if(hit(/\b(shorts?|bermudas?)\b/))noun="Pantalón corto";
+   else if(hit(/\b(t shirts?|tshirt|tee shirts?|tees?)\b/)){noun="Camiseta";female=true;upper=true;}
+   else if(hit(/\b(tank tops?|camisoles?)\b/)){noun="Camiseta sin mangas";female=true;upper=true;}
+   else if(hit(/\b(blouses?)\b/)){noun="Blusa";female=true;upper=true;}
+   else if(hit(/\b(shirts?)\b/)){noun="Camisa";female=true;upper=true;}
+   else if(hit(/\b(dresses?)\b/)){noun="Vestido";}
+   else if(hit(/\b(skirts?)\b/)){noun="Falda";female=true;}
+   else if(hit(/\b(hoodies?)\b/)){noun="Sudadera con capucha";female=true;}
+   else if(hit(/\b(sweatshirts?)\b/)){noun="Sudadera";female=true;}
+   else if(hit(/\b(sweaters?|jumpers?)\b/)){noun="Suéter";}
+   else if(hit(/\b(jackets?)\b/)){noun="Chaqueta";female=true;}
+   else if(hit(/\b(coats?)\b/)){noun="Abrigo";}
+   else if(hit(/\b(sneakers?|trainers?)\b/)){noun="Zapatillas deportivas";female=true;}
+   else if(hit(/\b(sandals?)\b/)){noun="Sandalias";female=true;}
+   else if(hit(/\b(boots?)\b/)){noun="Botas";female=true;}
+   else if(hit(/\b(shoes?)\b/)){noun="Zapatos";}
+   else if(hit(/\b(bags?|handbags?)\b/)){noun="Bolso";}
+   else if(hit(/\b(swimsuits?|swimwear|bikinis?)\b/)){noun="Traje de baño";}
+   else if(hit(/\b(sets?|outfits?)\b/)){noun="Conjunto";}
+   const parts=[noun];
+   if(upper){
+     if(hit(/\bshort sleeves?\b/))parts.push("de manga corta");
+     else if(hit(/\blong sleeves?\b/))parts.push("de manga larga");
+   }
+   if(hit(/\b(oversized|oversize|loose fit|baggy)\b/))parts.push(female?"holgada":"holgado");
+   else if(hit(/\b(slim fit|skinny|fitted)\b/))parts.push(female?"ajustada":"ajustado");
+   else if(hit(/\b(straight leg|straight fit)\b/))parts.push("de corte recto");
+   if(hit(/\b(light grey|light gray)\b/))parts.push("gris claro");
+   else if(hit(/\b(dark grey|dark gray)\b/))parts.push("gris oscuro");
+   else if(hit(/\b(light blue)\b/))parts.push("azul claro");
+   else if(hit(/\b(dark blue|navy blue|navy)\b/))parts.push("azul marino");
+   else{
+     const colors=[
+       [/\b(grey|gray)\b/,"gris"],[/\bblack\b/,female?"negra":"negro"],
+       [/\bwhite\b/,female?"blanca":"blanco"],[/\bblue\b/,"azul"],
+       [/\bred\b/,female?"roja":"rojo"],[/\bpink\b/,"rosa"],
+       [/\bgreen\b/,"verde"],[/\b(beige|khaki)\b/,"beige"],
+       [/\bbrown\b/,"marrón"],[/\bpurple\b/,"morado"],[/\byellow\b/,"amarillo"]
+     ];
+     const match=colors.find(([re])=>hit(re));
+     if(match)parts.push(match[1]);
+   }
+   if(hit(/\b(multiple pockets|multi pockets|multi pocket|multi-pocket)\b/))
+     parts.push("con varios bolsillos");
+   if(hit(/\b(elastic waist|elastic waistband)\b/))
+     parts.push("con cintura elástica");
+   if(hit(/\b(button down|button front)\b/))
+     parts.push("con botones");
+   if(hit(/\b(los angeles)\b/))parts.push("con inscripción «Los Angeles»");
+   else if(hit(/\b(floral print|floral pattern|flower print)\b/))
+     parts.push("con estampado floral");
+   else if(hit(/\b(print|printed|graphic|patterned|pattern|embroidered)\b/))
+     parts.push(hit(/\bembroidered\b/)?"con bordado":"con estampado");
+   else if(hit(/\b(solid color|plain)\b/))parts.push("liso");
+   parts.push(category==="hombre"?"para hombre":
+     category==="mujer"?"para mujer":category==="ninos"?"infantil":"");
+   return parts.filter(Boolean).join(" ").slice(0,200);
+ }
+
  function inspectSheinLinks(){
    const text=String($("sheinBulkUrls").value||"");
    const fallback=String($("sheinBulkCategory").value||"");
@@ -600,11 +669,7 @@
      const brand=/^manfinity homme\b/i.test(words)?"Manfinity Homme":
        /^manfinity\b/i.test(words)?"Manfinity":
        /^shein\b/i.test(words)?"SHEIN":"Marca por confirmar";
-     const title=words
-       .replace(/\b(Men|Women|Man|Woman|Boy|Girl) s\b/gi,(_,word)=>word+"'s")
-       .replace(/\bT Shirt\b/gi,"T-Shirt")
-       .replace(/\b([A-Za-z])\b/g,(x)=>x)
-       .slice(0,200).trim();
+     const title=provisionalNameSpanish(slug,category);
      if(title.length<2){errors.push("Producto "+id+": el enlace no contiene un nombre reconocible.");continue;}
      const clean=url.origin+url.pathname;
      const existing=pendingList.some(p=>String(p.source_product_id)===id);
@@ -619,7 +684,7 @@
    let html="";
    if(items.length){
      html='<div class="table-scroll"><table><thead><tr>'+
-      '<th>ID SHEIN</th><th>Nombre provisional (extraído del enlace)</th><th>Marca provisional</th><th>Categoría</th><th>Acción</th>'+
+      '<th>ID SHEIN</th><th>Nombre provisional en español</th><th>Marca original o provisional</th><th>Categoría</th><th>Acción</th>'+
       '</tr></thead><tbody>'+
       items.map(x=>'<tr><td>'+esc(x.id)+'</td><td>'+esc(x.name_hint)+'</td>'+
         '<td>'+esc(x.brand_hint)+'</td><td>'+esc(categories[x.category])+'</td>'+
