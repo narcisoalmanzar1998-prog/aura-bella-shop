@@ -64,6 +64,11 @@
    <div class="tile"><strong id="adminDrafts">0</strong><span>En revisión</span></div>
   </div>
   <p class="status" id="adminStatus" role="status" aria-live="polite"></p>
+  <section class="card" aria-labelledby="pendingSheinTitle">
+   <h2 id="pendingSheinTitle">Enlaces SHEIN pendientes de verificar</h2>
+   <p>Productos recibidos para revisión. No están publicados y todavía no tienen precios de venta. Verifica el artículo y las variantes desde SHEIN antes de pasarlo al inventario.</p>
+   <div class="table-scroll"><table><thead><tr><th>ID SHEIN</th><th>Marca / artículo</th><th>Categoría</th><th>Estado</th><th>Enlace original</th></tr></thead><tbody id="pendingSheinRows"><tr><td colspan="5">Cargando pendientes…</td></tr></tbody></table></div>
+  </section>
   <section class="card" aria-labelledby="settingTitle">
    <h2 id="settingTitle">Reglas de precios SHEIN</h2>
    <p class="hint">No afectan la perfumería. Todos los importes públicos se muestran en pesos dominicanos. El envío se suma por cada unidad.</p>
@@ -132,6 +137,6 @@
 <div class="foot">AURA BELLA SHOP · COSTOS Y MÁRGENES PRIVADOS · NUNCA PUBLICAR CREDENCIALES</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/auth-config.js"></script>
-<script src="/admin-shein.js?v=shein3"></script>
+<script src="/admin-shein.js?v=shein4"></script>
 </body>
 </html>
