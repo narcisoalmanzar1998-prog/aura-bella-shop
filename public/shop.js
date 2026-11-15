@@ -42,11 +42,11 @@
       '<div class="shop-cart-total"><span>Subtotal de perfumes'+(hasPending?' (parcial)':'')+'</span><strong>'+htmlEscape(money(known))+'</strong></div>';
     }
     if(clothes)body.innerHTML+=window.auraApparel?.cartHtml?.()||'';
-    body.innerHTML+='<p class="shop-help">Este es un pedido por solicitud. Confirmaremos existencias y condiciones antes de formalizarlo. El envío SHEIN se calcula por unidad, y no se aplica automáticamente a los perfumes.</p>';
+    body.innerHTML+='<p class="shop-help">Este es un pedido por solicitud. Confirmaremos existencias y condiciones antes de formalizarlo. El envío de ropa se calcula por unidad. Para los perfumes, el costo de envío y el plazo se confirman antes de finalizar el pedido.</p>';
     if(clothes){
       body.innerHTML+='<div class="shop-actions"><button type="button" class="shop-primary shein-checkout-button" data-checkout-clothing-cart>Pedir carrito en WhatsApp</button><button type="button" data-close-cart class="shop-secondary">Seguir comprando</button></div>';
     }else{
-      body.innerHTML+='<div class="shop-actions"><a class="shop-primary" href="'+htmlEscape(waLink(cartMessage()))+'" target="_blank" rel="noopener noreferrer">Pedir carrito en WhatsApp</a><button type="button" data-close-cart class="shop-secondary">Seguir comprando</button></div>';
+      body.innerHTML+='<div class="shop-actions"><button type="button" class="shop-primary" data-checkout-perfume-cart>Pedir carrito en WhatsApp</button><button type="button" data-close-cart class="shop-secondary">Seguir comprando</button></div>';
     }
   }
   function closeCart(){layer.classList.remove("is-open");layer.setAttribute("aria-hidden","true");document.body.style.overflow="";opener?.focus?.();}
@@ -99,7 +99,7 @@
   document.addEventListener("click",e=>{
     const add=e.target.closest("[data-add]");if(add){addProductClicked(add);return;}
     if(e.target.closest("#cartToggle")){openCart();return;}
-    if(e.target.closest("[data-checkout-clothing-cart]")){window.auraApparel?.checkoutCart?.(items());return;}
+    if(e.target.closest("[data-checkout-clothing-cart]")||e.target.closest("[data-checkout-perfume-cart]")){window.auraApparel?.checkoutCart?.(items());return;}
     if(e.target.closest("[data-close-cart]")){closeCart();return;}
     const qty=e.target.closest("[data-qty-id]");if(qty){change(qty.dataset.qtyId,Number(qty.dataset.delta));return;}
     const remove=e.target.closest("[data-remove]");if(remove){change(remove.dataset.remove,0,true);return;}
