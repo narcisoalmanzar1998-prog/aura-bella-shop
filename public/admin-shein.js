@@ -81,7 +81,7 @@
    if(!incoming.length){target.innerHTML='<p class="hint">Selecciona un CSV o JSON autorizado para revisar sus variantes antes de importar.</p>';$("csvImport").disabled=true;return;}
    const h='<tr><th>SKU</th><th>Artículo</th><th>Variante</th><th>Original USD</th><th>Venta RD$</th><th>Estado</th></tr>';
    const result=incoming.slice(0,8).map(r=>{
-    const price=Math.round(Number(r.cost_usd)*65+Number(settings.margin_rd));
+    const price=Math.round(Number(r.cost_usd)*Number(settings.exchange_rate)+Number(settings.margin_rd));
     return '<tr><td>'+esc(r.sku)+'</td><td>'+esc(r.brand+' '+r.title)+'</td><td>'+esc(r.color+' / '+r.size)+'</td><td>US$'+esc(r.cost_usd)+'</td><td>'+rd(price)+'</td><td>'+esc(draftStatus(r))+'</td></tr>';
    }).join("");
    target.innerHTML='<p class="hint">'+incoming.length+' variantes listas. Los borradores no se publicarán hasta cumplir todas las verificaciones.</p><div class="table-scroll"><table>'+h+result+'</table></div>';
@@ -91,8 +91,9 @@
    $("adminCount").textContent=String(inventory.length);
    $("adminReady").textContent=String(inventory.filter(r=>publishedSkus.has(String(r.sku))).length);
    $("adminDrafts").textContent=String(inventory.filter(r=>!publishedSkus.has(String(r.sku))).length);
-   $("rateValue").value="RD$"+settings.exchange_rate+" / US$1";
-   $("leadValue").textContent=settings.lead_days+" días";
+   $("rateValue").value=Number(settings.exchange_rate);
+   $("leadInput").value=Number(settings.lead_days);
+   $("leadDaysCheckbox").textContent=String(settings.lead_days);
    $("marginInput").value=settings.margin_rd;
    $("shippingInput").value=settings.shipping_rd;
    preview();
@@ -103,7 +104,7 @@
   const table=$("inventoryTable");
   const head='<tr><th>SKU</th><th>Producto · variante</th><th>Original SHEIN</th><th>Venta</th><th>Envío</th><th>Total</th><th>Estado</th><th>Acción</th></tr>';
   const body=filtered.slice(0,250).map(r=>{
-   const sell=Math.round(Number(r.cost_usd)*65+Number(settings.margin_rd));
+   const sell=Math.round(Number(r.cost_usd)*Number(settings.exchange_rate)+Number(settings.margin_rd));
    const publish=publishedSkus.has(String(r.sku));
    return '<tr><td><code>'+esc(r.sku)+'</code></td><td><strong>'+esc(r.brand+' '+r.title)+'</strong><small>'+esc(categories[r.category]+' · '+r.color+' · '+r.size)+'</small></td>'+
     '<td>US$'+esc(r.cost_usd)+'</td><td>'+rd(sell)+'</td><td>'+rd(settings.shipping_rd)+'</td><td><b>'+rd(sell+Number(settings.shipping_rd))+'</b></td>'+
@@ -495,11 +496,32 @@
  });
  $("settingsForm").addEventListener("submit",e=>{
   e.preventDefault();
-  const m=Number($("marginInput").value),ship=Number($("shippingInput").value);
-  if(!Number.isInteger(m)||!Number.isInteger(ship)||m<0||ship<0){status("Escribe importes enteros válidos.",true);return;}
+  const rate=Number($("rateValue").value);
+  const margin=Number($("marginInput").value);
+  const shipping=Number($("shippingInput").value);
+  const days=Number($("leadInput").value);
+  if(!$("settingsForm").checkValidity()||
+      !Number.isFinite(rate)||rate<1||rate>500||Math.round(rate*100)!==rate*100||
+      !Number.isInteger(margin)||margin<0||margin>100000||
+      !Number.isInteger(shipping)||shipping<0||shipping>100000||
+      !Number.isInteger(days)||days<1||days>90){
+    const msg="Valores inválidos: tasa de 1 a 500 con hasta 2 decimales; ganancia y envío entre 0 y 100,000; entrega de 1 a 90 días.";
+    $("settingsResult").textContent=msg;status(msg,true);return;
+  }
+  const daysChanged=days!==Number(settings.lead_days);
+  if(daysChanged&&!window.confirm("El plazo pasará de "+settings.lead_days+" a "+days+
+      " días en los productos SHEIN publicados y sus mensajes de WhatsApp. ¿Confirmas que ese nuevo plazo es real para todos los productos activos?"))return;
+  const priceChanged=rate!==Number(settings.exchange_rate)||margin!==Number(settings.margin_rd)||
+     shipping!==Number(settings.shipping_rd);
+  if(priceChanged&&!window.confirm("Se recalcularán los precios SHEIN publicados con la nueva tasa, ganancia y costo de envío. No afecta a los perfumes. ¿Guardar?"))return;
   run(async()=>{
-   const {error}=await client.rpc("admin_shein_update_prices",{p_margin_rd:m,p_shipping_rd:ship});
-   if(error)throw error;
+    const {data,error}=await client.rpc("admin_shein_update_settings",{
+      p_exchange_rate:rate,p_margin_rd:margin,p_shipping_rd:shipping,
+      p_lead_days:days,p_delivery_confirmed:daysChanged
+    });
+    if(error)throw error;
+    $("settingsResult").textContent="Cambios guardados. "+Number(data?.recalculated||0)+
+      " variante(s) revisadas y productos SHEIN actualizados. Plazo: "+days+" días.";
   });
  });
 
@@ -599,7 +621,7 @@
      "\nTalla(s): "+sizes.join(", ")+
      "\nPrecio original SHEIN confirmado por ti: US$"+Number(base.cost_usd).toFixed(2)+
      "\nVenta: "+rd(price)+" + envío: "+rd(settings.shipping_rd)+" = "+rd(total)+" por unidad."+
-     "\nConfirmas que las imágenes están autorizadas para uso comercial y que hay existencias de TODAS las tallas, envío desde EE. UU. y plazo real de 17 días.";
+     "\nConfirmas que las imágenes están autorizadas para uso comercial y que hay existencias de TODAS las tallas, envío desde EE. UU. y plazo real de "+settings.lead_days+" días.";
    if(!window.confirm(confirmMsg))return;
    busy=true;
    try{
@@ -739,7 +761,7 @@
    const base=Math.round(original*Number(settings.exchange_rate)+Number(settings.margin_rd));
    const shipping=Number(settings.shipping_rd);
    const notice="¿Confirmas que tienes autorización comercial para publicar las imágenes de este artículo, "+
-      "que la disponibilidad, envío desde Estados Unidos y plazo de 17 días son reales? "+
+      "que la disponibilidad, envío desde Estados Unidos y plazo de "+settings.lead_days+" días son reales? "+
       "Se publicará UNA variante talla "+size+" usando el precio ORIGINAL TACHADO de US$"+
       original.toFixed(2)+". Precio de venta "+rd(base)+" + envío "+rd(shipping)+
       " = "+rd(base+shipping)+". La cifra anterior en inventario era US$"+
