@@ -13,6 +13,13 @@
 .apparel-card:has(.apparel-products.has-items) .apparel-status,.apparel-card:has(.apparel-products.has-items) .apparel-empty{display:none}
 .shein-item{min-width:0;border:1px solid #e4daca;background:#fff;color:#221d19;display:flex;flex-direction:column;overflow:hidden}
 .shein-photo{width:100%;height:250px;object-fit:contain;background:#f7f3eb;padding:14px}
+.shein-gallery{background:#f7f3eb}
+.shein-photo-thumbs{display:flex;gap:7px;overflow-x:auto;padding:8px 10px 12px;scrollbar-width:thin}
+.shein-photo-thumb{border:2px solid transparent;background:white;min-width:57px;width:57px;height:66px;padding:3px;cursor:pointer;border-radius:2px}
+.shein-photo-thumb[aria-pressed="true"]{border-color:#ae8f58}
+.shein-photo-thumb img{width:100%;height:100%;object-fit:contain}
+.shein-photo-thumb:focus-visible{outline:3px solid #b89b60;outline-offset:2px}
+
 .shein-detail{padding:20px;display:flex;flex-direction:column;gap:10px;flex:1}
 .shein-brand{color:#94764a;font-size:10px;text-transform:uppercase;letter-spacing:.17em;font-weight:700}
 .shein-name{font:normal 23px Georgia,serif;line-height:1.22;margin:0;color:#1c1a17}
@@ -66,6 +73,7 @@
   .apparel-products{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
   .shein-detail{padding:11px;gap:7px}
   .shein-photo{height:175px;padding:6px}
+  .shein-photo-thumb{min-width:45px;width:45px;height:52px}
   .shein-name{font-size:18px}
   .shein-variant-grid{grid-template-columns:1fr}
   .shein-actions{grid-template-columns:1fr}
