@@ -559,6 +559,119 @@
      formError("No se pudo abrir el formulario: "+(err?.message||"error desconocido"));
    }
  });
+
+ // The direct-link importer prepares product references. SHEIN prices and photos
+ // remain unverified until the administrator supplies authorized information.
+ function inspectSheinLinks(){
+   const text=String($("sheinBulkUrls").value||"");
+   const fallback=String($("sheinBulkCategory").value||"");
+   const raw=text.match(/https?:\/\/[^\s<>]+/gi)||[];
+   const errors=[],items=[],seen=new Set();
+   let repeated=0;
+   if(!raw.length)errors.push("Pega al menos un enlace que empiece por https://.");
+   if(raw.length>50)errors.push("Solo se permiten 50 enlaces en un lote. Divide la lista en grupos.");
+   for(let i=0;i<Math.min(raw.length,50);i++){
+     const original=raw[i].replace(/[)\]>,;]+$/g,"");
+     let url,pathname;
+     try{
+       url=new URL(original);
+       pathname=decodeURIComponent(url.pathname);
+     }catch(err){errors.push("Enlace "+(i+1)+": URL inválida.");continue;}
+     const host=url.hostname.toLowerCase();
+     if(url.protocol!=="https:"||url.username||url.password||
+       !(host==="shein.com"||host.endsWith(".shein.com"))){
+       errors.push("Enlace "+(i+1)+": la dirección debe pertenecer a SHEIN y utilizar HTTPS.");
+       continue;
+     }
+     const match=pathname.match(/-p-([0-9]{3,25})\.html$/i);
+     if(!match){errors.push("Enlace "+(i+1)+": no encuentro el ID de producto (-p-12345.html).");continue;}
+     const id=match[1];
+     if(seen.has(id)){repeated++;continue;}
+     seen.add(id);
+     const slug=pathname.split("/").pop().replace(/-p-[0-9]{3,25}\.html$/i,"");
+     const words=slug.replace(/[-_]+/g," ").replace(/\s+/g," ").trim();
+     const lower=words.toLowerCase();
+     let category="";
+     if(/\b(kids?|children|child|toddler|babies|baby|boys|girls|infants?)\b/i.test(lower))category="ninos";
+     else if(/\b(women|womens|woman|ladies|lady|female)\b/i.test(lower))category="mujer";
+     else if(/\b(men|mens|man|male|manfinity)\b/i.test(lower))category="hombre";
+     else category=fallback;
+     if(!category){errors.push("Producto "+id+": categoría no identificable. Selecciona una categoría debajo de los enlaces.");continue;}
+     const brand=/^manfinity homme\b/i.test(words)?"Manfinity Homme":
+       /^manfinity\b/i.test(words)?"Manfinity":
+       /^shein\b/i.test(words)?"SHEIN":"Marca por confirmar";
+     const title=words
+       .replace(/\b(Men|Women|Man|Woman|Boy|Girl) s\b/gi,(_,word)=>word+"'s")
+       .replace(/\bT Shirt\b/gi,"T-Shirt")
+       .replace(/\b([A-Za-z])\b/g,(x)=>x)
+       .slice(0,200).trim();
+     if(title.length<2){errors.push("Producto "+id+": el enlace no contiene un nombre reconocible.");continue;}
+     const clean=url.origin+url.pathname;
+     const existing=pendingList.some(p=>String(p.source_product_id)===id);
+     items.push({id,source_url:clean,category,brand_hint:brand,
+       name_hint:title,existing});
+   }
+   return {items,errors,repeated,total:raw.length};
+ }
+ function displaySheinLinksPreview(result){
+   const target=$("sheinBulkPreview");
+   const {items,errors,repeated,total}=result;
+   let html="";
+   if(items.length){
+     html='<div class="table-scroll"><table><thead><tr>'+
+      '<th>ID SHEIN</th><th>Nombre provisional (extraído del enlace)</th><th>Marca provisional</th><th>Categoría</th><th>Acción</th>'+
+      '</tr></thead><tbody>'+
+      items.map(x=>'<tr><td>'+esc(x.id)+'</td><td>'+esc(x.name_hint)+'</td>'+
+        '<td>'+esc(x.brand_hint)+'</td><td>'+esc(categories[x.category])+'</td>'+
+        '<td>'+(x.existing?"Ya existe: se conservarán sus datos":"Preparar ficha pendiente")+'</td></tr>').join("")+
+      '</tbody></table></div>';
+   }
+   if(errors.length){
+     html+='<div role="alert" class="alert"><strong>Enlaces que necesitan corrección:</strong><ul>'+
+       errors.slice(0,15).map(x=>'<li>'+esc(x)+'</li>').join("")+
+       '</ul></div>';
+   }
+   target.innerHTML=html;
+   $("sheinBulkStatus").textContent=items.length+" producto(s) identificados de "+total+
+      " enlace(s). "+(repeated?repeated+" repetido(s) dentro de este lote. ":"")+
+      (errors.length?errors.length+" enlace(s) requieren atención. ":"")+
+      "Los precios y fotografías no se inventarán ni publicarán automáticamente.";
+ }
+ $("sheinAnalyzeLinks").addEventListener("click",()=>{
+   const result=inspectSheinLinks();
+   displaySheinLinksPreview(result);
+ });
+ $("sheinImportLinks").addEventListener("click",async()=>{
+   if(busy)return;
+   const result=inspectSheinLinks();
+   displaySheinLinksPreview(result);
+   if(result.total>50||!result.items.length)return;
+   busy=true;
+   $("sheinImportLinks").disabled=true;
+   status("Guardando fichas de SHEIN como pendientes, sin publicarlas...");
+   try{
+     const {data,error}=await client.rpc("admin_shein_import_links",{
+       p_rows:result.items.map(({source_url,category,brand_hint,name_hint})=>({
+         source_url,category,brand_hint,name_hint
+       }))
+     });
+     if(error)throw error;
+     await load();
+     const created=Number(data?.created||0),existing=Number(data?.existing||0);
+     const msg="Guardadas "+created+" ficha(s) nueva(s). "+existing+
+       " ya estaba(n) registrada(s) y no se modificaron. "+
+       (result.errors.length?result.errors.length+" enlace(s) necesita(n) corrección. ":"")+
+       "Abre «Editar / publicar» en la lista inferior para completar precio original, tallas e imágenes autorizadas.";
+     $("sheinBulkStatus").textContent=msg;
+     status(msg);
+     $("pendingSheinTitle").scrollIntoView({behavior:"smooth",block:"start"});
+   }catch(err){
+     const msg="No se pudieron registrar los enlaces: "+(err?.message||"error de conexión");
+     $("sheinBulkStatus").textContent=msg;
+     status(msg,true);
+   }finally{busy=false;$("sheinImportLinks").disabled=false;}
+ });
+
  $("settingsForm").addEventListener("submit",e=>{
   e.preventDefault();
   const rate=Number($("rateValue").value);
