@@ -96,8 +96,8 @@
      <label class="field">Color<input name="color" required maxlength="80"></label>
      <label class="field">Talla<input name="size" required maxlength="50"></label>
      <label class="field">URL del producto SHEIN<input name="source_url" type="url" required placeholder="https://us.shein.com/..."></label>
-     <label class="field">URL de imagen autorizada<input name="image_url" type="url" placeholder="https://..."></label>
-     <label class="field" style="grid-column:1/-1">Descripción<textarea name="description" maxlength="3000"></textarea></label>
+     <label class="field">URL de imagen autorizada (opcional si la subes)<input name="image_url" type="url" placeholder="https://..."></label>
+     <label class="field" style="grid-column:1/-1">Descripción<textarea name="description" maxlength="3000"></textarea></label><div style="grid-column:1/-1;padding:16px;background:#fbf6e9;border:1px solid #ddc8a2"><label class="field" for="approvedPhotoFile">📷 Subir foto PROPIA o con permiso comercial (sin copiar URL)<input id="approvedPhotoFile" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="approvedPhotoHelp"></label><p class="hint" id="approvedPhotoHelp">Selecciona una fotografía hecha por ti o para la cual tengas permiso explícito de uso comercial. No publiques capturas ni imágenes de SHEIN sin autorización. Máximo 8 MB. Debes marcar «Tengo permiso para mostrar esta imagen» antes de cargarla.</p><div class="buttons"><button type="button" id="uploadApprovedPhoto" class="light">Subir foto autorizada y completar imagen automáticamente</button></div><div id="approvedPhotoPreview" style="margin-top:12px" aria-live="polite"></div></div>
     </div>
     <div class="checks">
      <label><input type="checkbox" id="manual-available" name="available">Hay existencias verificadas en el proveedor</label>
@@ -137,6 +137,6 @@
 <div class="foot">AURA BELLA SHOP · COSTOS Y MÁRGENES PRIVADOS · NUNCA PUBLICAR CREDENCIALES</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/auth-config.js"></script>
-<script src="/admin-shein.js?v=shein6"></script>
+<script src="/admin-shein.js?v=shein7"></script>
 </body>
 </html>
