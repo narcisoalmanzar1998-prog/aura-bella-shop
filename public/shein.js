@@ -33,15 +33,25 @@
    base.hash="ropa-"+v.category;
    return base.toString();
  }
+ function galleryUrls(v){
+   const photos=Array.isArray(v.image_urls)&&v.image_urls.length?v.image_urls:[v.image_url];
+   return Array.from(new Set(photos.filter(x=>/^https:\/\//i.test(String(x||""))))).slice(0,12);
+ }
  function card(g){
    const v=selected(g);
    if(!v)return "";
+   const photos=galleryUrls(v);
+   const cover=photos[0]||v.image_url;
    const colors=Array.from(new Set(g.variants.map(x=>x.color)));
    const sizes=Array.from(new Set(g.variants.filter(x=>x.color===v.color).map(x=>x.size)));
    const colorOptions=colors.map(c=>'<option value="'+esc(c)+'"'+(c===v.color?' selected':'')+'>'+esc(c)+'</option>').join("");
    const sizeOptions=sizes.map(s=>'<option value="'+esc(s)+'"'+(s===v.size?' selected':'')+'>'+esc(s)+'</option>').join("");
    return '<article class="shein-item" data-shein-group="'+esc(g.id)+'">'+
-    '<img class="shein-photo" loading="lazy" src="'+esc(safeUrl(v.image_url))+'" alt="'+esc(v.brand+' '+v.title)+'" onerror="this.onerror=null;this.src=\'/logo-aura-bella.jpg\'">'+
+    '<div class="shein-gallery"><img class="shein-photo" loading="lazy" src="'+esc(safeUrl(cover))+'" alt="'+esc(v.brand+' '+v.title)+'" onerror="this.onerror=null;this.src=\'/logo-aura-bella.jpg\'">'+
+    (photos.length>1?'<div class="shein-photo-thumbs" aria-label="Galería de fotos del producto">'+photos.map((url,i)=>
+      '<button type="button" class="shein-photo-thumb" data-shein-thumb data-photo-url="'+esc(url)+'" aria-pressed="'+(i===0?'true':'false')+'" aria-label="Ver foto '+(i+1)+' de '+photos.length+'">'+
+      '<img loading="lazy" src="'+esc(url)+'" alt="Vista previa '+(i+1)+'" onerror="this.onerror=null;this.src=\'/logo-aura-bella.jpg\'"></button>'
+    ).join('')+'</div>':'')+'</div>'+
     '<div class="shein-detail"><span class="shein-brand">'+esc(v.brand)+'</span>'+
     '<h4 class="shein-name">'+esc(v.title)+'</h4>'+
     '<p class="shein-description">'+esc(v.description||"Selecciona tu color y talla para solicitar este artículo.")+'</p>'+
@@ -175,7 +185,7 @@
   const received=[];let from=0;
   while(true){
    const {data,error}=await client.from("shein_products")
-     .select("sku,source_product_id,category,title,brand,description,color,size,image_url,unit_price_rd,shipping_rd,total_rd,verified_at")
+     .select("sku,source_product_id,category,title,brand,description,color,size,image_url,image_urls,unit_price_rd,shipping_rd,total_rd,verified_at")
      .order("source_product_id").order("sku").range(from,from+499);
    if(error)throw error;
    received.push(...(data||[]));
@@ -257,6 +267,17 @@
   }
  });
  document.addEventListener("click",async e=>{
+  const thumb=e.target.closest("[data-shein-thumb]");
+  if(thumb){
+   const gallery=thumb.closest(".shein-gallery");
+   const main=gallery?.querySelector(".shein-photo");
+   const url=thumb.dataset.photoUrl;
+   if(main&&/^https:\/\//i.test(String(url||""))){
+     main.src=url;
+     gallery.querySelectorAll("[data-shein-thumb]").forEach(b=>b.setAttribute("aria-pressed",String(b===thumb)));
+   }
+   return;
+  }
   const order=e.target.closest("[data-shein-order]");
   if(order){orderOne(order.dataset.sheinOrder);return;}
   const add=e.target.closest("[data-shein-add]");
