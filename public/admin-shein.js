@@ -129,7 +129,7 @@
    return '<tr><td>'+esc(p.source_product_id)+'</td><td><b>'+esc(p.brand_hint+' · '+p.name_hint)+'</b><small>'+esc(p.variant_notes||p.note||'')+'</small></td>'+
    '<td>'+esc(categories[p.category]||p.category)+'</td><td>'+(orig==null?'Por verificar':'US$'+orig.toFixed(2))+'</td>'+
    '<td>'+(total==null?'Pendiente':rd(total)+' (referencia interna)')+'</td>'+
-   '<td><span class="'+(approved?'ok':'pending')+'">'+(approved?'Revisado':'Pendiente')+'</span></td>'+
+   '<td><span class="'+(approved?'ok':'pending')+'">'+(approved?'Revisado':(p.draft_form&&Object.keys(p.draft_form).length?'Borrador guardado':'Pendiente'))+'</span></td>'+
    '<td><button type="button" data-review-pending="'+esc(p.source_product_id)+'">'+(approved?'Agregar variante':'Verificar y publicar')+'</button> '+
    '<button type="button" data-shein-attach-photo="'+esc(p.source_product_id)+'">Adjuntar varias fotos</button> '+
    ((p.review_photo_paths?.length||p.review_photo_path)?'<button type="button" data-shein-see-photo="'+esc(p.source_product_id)+'">Ver '+(p.review_photo_paths?.length||1)+' fotos privadas</button> ':'')+
@@ -177,6 +177,49 @@
    $("skuFormAlert").textContent="";
  });
 
+
+
+ function draftData(){
+   const form=$("skuForm"),out={};
+   for(const key of fields){
+     if(key==="verified_at"||flags.includes(key))continue;
+     const input=form.elements.namedItem(key);
+     out[key]=String(input?.value??"");
+   }
+   for(const flag of flags)out[flag]=String(Boolean($("manual-"+flag)?.checked));
+   out.manualVerified=String(Boolean($("manualVerified")?.checked));
+   out.source_product_id=selectedPendingId||out.source_product_id;
+   return out;
+ }
+ async function saveDraftInternal(){
+   if(!selectedPendingId){formError("Primero elige el producto con «Verificar y publicar» para guardar un borrador.");return false;}
+   const id=String($("skuForm").elements.namedItem("source_product_id")?.value??"").trim();
+   if(id!==selectedPendingId){formError("El ID SHEIN no coincide con la referencia seleccionada. No se guardó.");return false;}
+   try{
+     const {error}=await client.rpc("admin_shein_save_draft",{
+       p_source_product_id:selectedPendingId,p_draft:draftData()
+     });
+     if(error)throw error;
+     await load();
+     return true;
+   }catch(err){
+     formError("No se pudo guardar el borrador: "+(err.message||"error de conexión"));
+     return false;
+   }
+ }
+ async function saveDraftWithPhotos(){
+   if(!selectedPendingId){formError("Selecciona primero un producto pendiente.");return;}
+   const files=Array.from($("approvedPhotoFile").files||[]);
+   if(files.length){
+     const uploaded=await uploadImages(selectedPendingId,"review",files);
+     if(!uploaded){formError("No se pudieron guardar todas las fotos. Revisa el aviso anterior.");return;}
+   }
+   const saved=await saveDraftInternal();
+   if(saved){
+     $("skuFormAlert").hidden=true;
+     status("Borrador guardado correctamente. Puedes dejar campos vacíos; el producto NO se ha publicado. "+(files.length?files.length+" foto(s) añadida(s) a revisión privada.":""));
+   }
+ }
 
  const reviewFile=$("sheinReviewFile");
  const approvedFile=$("approvedPhotoFile");
@@ -272,11 +315,13 @@
        await showReviewGallery(id);
        status(count+" fotos añadidas a la revisión privada. No se publicaron en la tienda.");
      }
+     return true;
    }catch(err){
      await load();
      if(kind==="review")await showReviewGallery(id);
      else if(selectedPendingId===id)showApprovedGallery(id);
      status("Se guardaron "+count+" de "+files.length+" fotos. No se pudieron subir las restantes: "+(err.message||"error"),true);
+     return false;
    }finally{
      isUploading=false;
      $("uploadApprovedPhoto").disabled=false;
@@ -300,6 +345,16 @@
    const files=Array.from(reviewFile.files||[]);
    if(id&&files.length)await uploadImages(id,"review",files);
  });
+
+ $("uploadReviewFromForm").addEventListener("click",async()=>{
+   if(!selectedPendingId){formError("Primero selecciona una referencia SHEIN para adjuntar imágenes.");return;}
+   const files=Array.from(approvedFile.files||[]);
+   if(!files.length){formError("Selecciona una o varias fotos antes de pulsar guardar.");return;}
+   const ok=await uploadImages(selectedPendingId,"review",files);
+   if(ok)status("Fotos guardadas privadamente sin exigir los demás campos del artículo. Puedes completar la ficha después.");
+ });
+ $("saveSheinDraft").addEventListener("click",saveDraftWithPhotos);
+
  $("uploadApprovedPhoto").addEventListener("click",async()=>{
    const id=String($("skuForm").elements.namedItem("source_product_id")?.value||"").trim();
    if(!selectedPendingId||selectedPendingId!==id){
@@ -345,9 +400,12 @@
      const values={
        source_product_id:p.source_product_id,category:p.category,title:p.name_hint,
        brand:p.brand_hint,source_url:p.source_url,
-       cost_usd:p.regular_price_usd??""
+       cost_usd:p.regular_price_usd??"",
+       ...(p.draft_form||{})
      };
      for(const [key,value] of Object.entries(values)){
+       if(flags.includes(key)){$("manual-"+key).checked=value===true||value==="true";continue;}
+       if(key==="manualVerified"){$("manualVerified").checked=value===true||value==="true";continue;}
        const field=form.elements.namedItem(key);
        if(field)field.value=value;
      }
@@ -359,7 +417,7 @@
      showApprovedGallery(selectedPendingId);
      $("manualProductSection").scrollIntoView({behavior:"auto",block:"start"});
      selected.focus?.({preventScroll:true});
-     status("Formulario abierto para SHEIN "+selectedPendingId+". Completa los campos que faltan.");
+     status((p.draft_form&&Object.keys(p.draft_form).length?"Borrador recuperado. ":"Formulario abierto. ")+"SHEIN "+selectedPendingId+". Puedes subir fotos y guardar aunque falten datos.");
    }catch(err){
      formError("No se pudo abrir el formulario: "+(err?.message||"error desconocido"));
    }
@@ -373,34 +431,68 @@
    if(error)throw error;
   });
  });
- $("skuForm").addEventListener("submit",e=>{
+
+ $("skuForm").addEventListener("submit",async e=>{
   e.preventDefault();
   const form=e.target;
+  const files=Array.from(approvedFile.files||[]);
+  // Uploads are independent from required product fields.
+  if(files.length && selectedPendingId){
+    const validBasics=form.checkValidity();
+    const canApprove=validBasics&&$("manualVerified").checked&&
+      ["available","enabled","source_authorized","image_rights_ok","via_usa_confirmed","eta_17_confirmed"]
+        .every(f=>$("manual-"+f).checked);
+    const kind=canApprove?"approved":"review";
+    const success=await uploadImages(selectedPendingId,kind,files);
+    if(!success){
+      await saveDraftInternal();
+      formError("Las imágenes no se pudieron guardar por completo. Guardé los demás datos como borrador.");
+      return;
+    }
+    if(kind==="review"){
+      const saved=await saveDraftInternal();
+      if(saved)formError("Guardé las fotos como PRIVADAS y la ficha como borrador. Completa los campos y permisos pendientes para publicarla.");
+      return;
+    }
+  }
   if(!form.checkValidity()){
     const field=form.querySelector(":invalid");
-    const label=field?.closest("label")?.textContent?.trim().replace(/\\s+/g," ").slice(0,130)||"los campos obligatorios";
-    formError("Falta completar o corregir: "+label+". Revisa el campo señalado.",field);
+    const label=field?.closest("label")?.textContent?.trim().replace(/\s+/g," ").slice(0,130)||"un campo obligatorio";
+    const saved=await saveDraftInternal();
+    formError((saved?"Borrador guardado, sin publicación. ":"")+"Falta completar o corregir: "+label+".",field);
     return;
   }
   const fd=Object.fromEntries(new FormData(form).entries());
   for(const f of flags)fd[f]=$("manual-"+f).checked;
-  if(!$("manualVerified").checked){formError("Confirma que verificaste el precio ORIGINAL TACHADO, la talla y disponibilidad.",$("manualVerified"));return;}
+  if(!$("manualVerified").checked){
+    const saved=await saveDraftInternal();
+    formError((saved?"Borrador guardado, sin publicación. ":"")+"Confirma que verificaste el precio original tachado, la talla y disponibilidad.");
+    return;
+  }
   fd.verified_at=new Date().toISOString();
   let input;
-  try{input=normalize(fd,0);}catch(e){formError(e.message);return;}
+  try{input=normalize(fd,0)}catch(err){
+    const saved=await saveDraftInternal();
+    formError((saved?"Borrador guardado, sin publicación. ":"")+err.message);
+    return;
+  }
   if(selectedPendingId&&input.source_product_id!==selectedPendingId){
-   formError("El ID del producto seleccionado no coincide con la referencia en revisión.");return;
+    formError("El ID del producto no coincide con la referencia en revisión.");return;
   }
   if(input.enabled&&!(input.available&&input.source_authorized&&input.image_rights_ok&&input.via_usa_confirmed&&input.eta_17_confirmed&&input.image_url)){
-   formError("Antes de publicar confirma existencias, permisos comerciales de las fotos, ruta desde Estados Unidos, plazo de 17 días y una foto pública autorizada. Si falta alguna condición, desmarca «Quiero activar esta variante» y guarda el borrador.");return;
+    const saved=await saveDraftInternal();
+    formError((saved?"Borrador guardado, sin publicación. ":"")+
+      "Antes de publicar confirma existencias, permisos comerciales de las imágenes, ruta desde EE. UU., 17 días y una foto autorizada. "+
+      "También puedes guardar el borrador y fotos privadas sin esos datos.");
+    return;
   }
-  if(input.enabled&&!confirm("¿Confirmas que verificaste el precio ORIGINAL TACHADO, la variante, los derechos de uso de imágenes y el plazo de entrega? La variante aparecerá en la tienda si cumple los requisitos."))return;
+  if(input.enabled&&!confirm("¿Confirmas que verificaste el precio ORIGINAL TACHADO, las variantes, el permiso de imágenes y el plazo real de entrega? Se publicará si cumple los requisitos."))return;
   run(async()=>{
    const {error}=await client.rpc("admin_shein_import",{p_rows:[input]});
    if(error)throw error;
    if(selectedPendingId&&input.enabled){
-     const mark=await client.rpc("admin_shein_mark_reviewed",{p_source_product_id:selectedPendingId});
-     if(mark.error)throw mark.error;
+     const marked=await client.rpc("admin_shein_mark_reviewed",{p_source_product_id:selectedPendingId});
+     if(marked.error)throw marked.error;
    }
    resetSelection();
   });
