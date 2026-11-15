@@ -127,11 +127,11 @@
   '<p>¡Gracias por elegir Aura Bella Shop! ✨</p>'+
   '<p>Nuestros productos SHEIN provienen directamente de los Estados Unidos. 🇺🇸</p>'+
   '<p>Por este motivo, contamos con un tiempo estimado de entrega de <b>17 días</b>, durante el cual recibimos, preparamos, empaquetamos y coordinamos la entrega de tu pedido.</p>'+
-  '<p>🚚 <b>Costo de envío: RD$100 por producto.</b> El cargo se aplica por unidad, sin descuentos automáticos.</p>'+
+  '<p>🚚 <b>Costo de envío: <span id="sheinConsentShipping">RD$100</span> por producto.</b> El cargo se aplica por unidad, sin descuentos automáticos.</p>'+
   '<p>Agradecemos tu confianza y comprensión.</p>'+
   '<p><b>Aura Bella Shop — Elegancia en cada detalle. ✨</b></p>'+
   '<div id="sheinConsentSummary" class="shein-summary"></div>'+
-  '<label class="shein-check-row"><input type="checkbox" id="sheinAccept"><span>He leído y acepto el plazo estimado de entrega de 17 días y el costo de envío de RD$100 por cada unidad SHEIN.</span></label>'+
+  '<label class="shein-check-row"><input type="checkbox" id="sheinAccept"><span>He leído y acepto el plazo estimado de entrega de 17 días y el costo de envío indicado de <span id="sheinConsentShippingCheck">RD$100</span> por cada unidad SHEIN.</span></label>'+
   '<div class="shein-dialog-actions"><button type="button" class="shein-back" data-shein-back>Volver a la tienda</button>'+
   '<button type="button" class="shein-confirm" id="sheinGoWhatsapp" disabled>Aceptar y continuar a WhatsApp</button></div></section>';
  document.body.appendChild(consent);
@@ -148,6 +148,9 @@
    const products=things.reduce((n,i)=>n+i.row.unit_price_rd*i.quantity,0);
    const pricePerf=perfumes.reduce((n,i)=>n+(i.p.price||0)*i.quantity,0);
    const count=things.reduce((n,i)=>n+i.quantity,0);
+   const unitShip=things[0].row.shipping_rd;
+   document.getElementById("sheinConsentShipping").textContent=money(unitShip);
+   document.getElementById("sheinConsentShippingCheck").textContent=money(unitShip);
    const summary=document.getElementById("sheinConsentSummary");
    summary.innerHTML='<div><span>Productos SHEIN</span><strong>'+money(products)+'</strong></div>'+
     '<div><span>Envío ('+count+' unidades)</span><strong>'+money(shipping)+'</strong></div>'+
