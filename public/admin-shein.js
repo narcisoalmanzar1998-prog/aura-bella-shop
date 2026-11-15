@@ -88,7 +88,7 @@
    $("adminCount").textContent=String(inventory.length);
    $("adminReady").textContent=String(inventory.filter(r=>draftStatus(r)==="Publicable").length);
    $("adminDrafts").textContent=String(inventory.filter(r=>draftStatus(r)!=="Publicable").length);
-   $("rateValue").textContent="RD$"+settings.exchange_rate+" / US$1";
+   $("rateValue").value="RD$"+settings.exchange_rate+" / US$1";
    $("leadValue").textContent=settings.lead_days+" días";
    $("marginInput").value=settings.margin_rd;
    $("shippingInput").value=settings.shipping_rd;
