@@ -45,6 +45,12 @@
   td small{display:block;margin-top:6px;color:#7a7164}
   td button{border:1px solid #aa8e5a;background:#fff;padding:8px;color:#3f3323}
   .ok{color:#26643b;font-weight:bold}.pending{color:#9e6b24}
+  .admin-photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;margin:12px 0}
+  .admin-photo-tile{border:1px solid #dbc9a8;background:white;padding:8px;min-width:0}
+  .admin-photo-tile img{display:block;width:100%;height:115px;object-fit:contain}
+  .admin-photo-tile button{width:100%;font-size:11px;padding:8px 5px;margin-top:7px;border:1px solid #a88a59;background:#fff;color:#292019}
+  .admin-photo-count{font-size:12px;color:#6c593c}
+  .admin-photo-gallery:empty{display:none}
   .foot{font-size:11px;color:#8b816f;text-align:center;padding:20px}
   @media(max-width:850px){.fields{grid-template-columns:repeat(2,minmax(0,1fr))}.tiles{grid-template-columns:1fr 1fr}}
   @media(max-width:550px){h1{font-size:34px}.head{padding:12px}.brand{font-size:11px}.brand img{width:40px;height:40px}.fields,.checks,.tiles{grid-template-columns:1fr}.card{padding:17px}main{padding:20px 12px 50px}}
@@ -67,7 +73,7 @@
   <section class="card" aria-labelledby="pendingSheinTitle">
    <h2 id="pendingSheinTitle">Enlaces SHEIN pendientes de verificar</h2>
    <p>Revisa los productos y pulsa <b>Verificar y publicar</b> para completar el formulario. Solo se publicarán las variantes con precio original tachado comprobado, derechos de imagen, disponibilidad, ruta de entrega y plazo confirmados.</p>
-   <p class="hint">Puedes adjuntar desde tu celular una foto <strong>propia o autorizada</strong> sin copiar su dirección. Se guardará como referencia privada y no se publicará automáticamente.</p><input id="sheinReviewFile" type="file" accept="image/jpeg,image/png,image/webp" hidden aria-label="Seleccionar foto de revisión"><div id="sheinReviewPreview" aria-live="polite" style="margin:14px 0"></div><div class="table-scroll"><table><thead><tr><th>ID SHEIN</th><th>Marca / artículo</th><th>Categoría</th><th>Precio original</th><th>Total estimado</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="pendingSheinRows"><tr><td colspan="7">Cargando pendientes…</td></tr></tbody></table></div>
+   <p class="hint">Puedes seleccionar <strong>varias fotografías a la vez</strong> desde tu celular (máximo 12 por producto). Se guardan en revisión privada y <strong>no se publican automáticamente</strong>.</p><input id="sheinReviewFile" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden aria-label="Seleccionar foto de revisión"><div id="sheinReviewPreview" class="admin-photo-gallery" aria-live="polite" style="margin:14px 0"></div><div class="table-scroll"><table><thead><tr><th>ID SHEIN</th><th>Marca / artículo</th><th>Categoría</th><th>Precio original</th><th>Total estimado</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="pendingSheinRows"><tr><td colspan="7">Cargando pendientes…</td></tr></tbody></table></div>
   </section>
   <section class="card" aria-labelledby="settingTitle">
    <h2 id="settingTitle">Reglas de precios SHEIN</h2>
@@ -97,7 +103,7 @@
      <label class="field">Talla<input name="size" required maxlength="50"></label>
      <label class="field">URL del producto SHEIN<input name="source_url" type="url" required placeholder="https://us.shein.com/..."></label>
      <label class="field">URL de imagen autorizada (opcional si la subes)<input name="image_url" type="url" placeholder="https://..."></label>
-     <label class="field" style="grid-column:1/-1">Descripción<textarea name="description" maxlength="3000"></textarea></label><div style="grid-column:1/-1;padding:16px;background:#fbf6e9;border:1px solid #ddc8a2"><label class="field" for="approvedPhotoFile">📷 Subir foto PROPIA o con permiso comercial (sin copiar URL)<input id="approvedPhotoFile" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="approvedPhotoHelp"></label><p class="hint" id="approvedPhotoHelp">Selecciona una fotografía hecha por ti o para la cual tengas permiso explícito de uso comercial. No publiques capturas ni imágenes de SHEIN sin autorización. Máximo 8 MB. Debes marcar «Tengo permiso para mostrar esta imagen» antes de cargarla.</p><div class="buttons"><button type="button" id="uploadApprovedPhoto" class="light">Subir foto autorizada y completar imagen automáticamente</button></div><div id="approvedPhotoPreview" style="margin-top:12px" aria-live="polite"></div></div>
+     <label class="field" style="grid-column:1/-1">Descripción<textarea name="description" maxlength="3000"></textarea></label><div style="grid-column:1/-1;padding:16px;background:#fbf6e9;border:1px solid #ddc8a2"><label class="field" for="approvedPhotoFile">📷 Subir foto PROPIA o con permiso comercial (sin copiar URL)<input id="approvedPhotoFile" type="file" accept="image/jpeg,image/png,image/webp" multiple aria-describedby="approvedPhotoHelp"></label><p class="hint" id="approvedPhotoHelp">Selecciona hasta 12 fotografías propias o con permiso comercial, juntas o en varias tandas (máximo 8 MB cada una). Las imágenes de SHEIN requieren autorización de publicación. Puedes quitar fotos y revisar la galería antes de publicar.</p><div class="buttons"><button type="button" id="uploadApprovedPhoto" class="light">Subir varias fotos autorizadas</button></div><div id="approvedPhotoPreview" class="admin-photo-gallery" style="margin-top:12px" aria-live="polite"></div></div>
     </div>
     <div class="checks">
      <label><input type="checkbox" id="manual-available" name="available">Hay existencias verificadas en el proveedor</label>
@@ -137,6 +143,6 @@
 <div class="foot">AURA BELLA SHOP · COSTOS Y MÁRGENES PRIVADOS · NUNCA PUBLICAR CREDENCIALES</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/auth-config.js"></script>
-<script src="/admin-shein.js?v=shein7"></script>
+<script src="/admin-shein.js?v=shein8"></script>
 </body>
 </html>
