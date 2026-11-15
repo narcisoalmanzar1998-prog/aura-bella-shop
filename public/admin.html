@@ -75,23 +75,10 @@
    <p>Revisa los productos y pulsa <b>Verificar y publicar</b> para completar el formulario. Solo se publicarán las variantes con precio original tachado comprobado, derechos de imagen, disponibilidad, ruta de entrega y plazo confirmados.</p>
    <p class="hint">Puedes seleccionar <strong>varias fotografías a la vez</strong> desde tu celular (máximo 12 por producto). Se guardan en revisión privada y <strong>no se publican automáticamente</strong>.</p><input id="sheinReviewFile" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden aria-label="Seleccionar foto de revisión"><div id="sheinReviewPreview" class="admin-photo-gallery" aria-live="polite" style="margin:14px 0"></div><div class="table-scroll"><table><thead><tr><th>ID SHEIN</th><th>Marca / artículo</th><th>Categoría</th><th>Precio original</th><th>Total estimado</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="pendingSheinRows"><tr><td colspan="7">Cargando pendientes…</td></tr></tbody></table></div>
   </section>
-  <section class="card" aria-labelledby="settingTitle">
-   <h2 id="settingTitle">Reglas de precios SHEIN</h2>
-   <p class="hint">No afectan la perfumería. Todos los importes públicos se muestran en pesos dominicanos. El envío se suma por cada unidad.</p>
-   <form id="settingsForm">
-    <div class="fields">
-     <label class="field">Conversión fija <input id="rateValue" value="RD$65 / US$1" readonly></label>
-     <label class="field">Ganancia fija por artículo (RD$)<input id="marginInput" type="number" min="0" max="100000" step="1" required value="1000"></label>
-     <label class="field">Envío por unidad (RD$)<input id="shippingInput" type="number" min="0" max="100000" step="1" required value="100"></label>
-    </div>
-    <p class="hint">Plazo informado: <b id="leadValue">17 días</b>, sujeto a comprobación de la operación real antes de publicar cada producto.</p>
-    <div class="buttons"><button type="submit">Guardar reglas y recalcular todo</button></div>
-   </form>
-  </section>
   <section class="card" id="manualProductSection" aria-labelledby="manualTitle">
-   <h2 id="manualTitle">Verificar y publicar una variante SHEIN</h2><p id="selectedPending" class="alert" hidden></p>
+   <h2 id="manualTitle">Verificar y publicar una variante SHEIN</h2><p class="hint">Esta sección se abre al seleccionar una referencia en la tabla anterior. Para guardar, completa los campos obligatorios de la variante y confirma los permisos reales.</p><p id="selectedPending" class="alert" hidden></p>
    <p class="hint">Utiliza únicamente imágenes y datos que estés autorizado a publicar. La clave SKU identifica una variante única (talla + color).</p>
-   <form id="skuForm">
+   <form id="skuForm" novalidate><div id="skuFormAlert" role="alert" class="alert" hidden style="margin-bottom:15px;border-left-color:#bb543e"></div>
     <div class="fields">
      <label class="field">SKU SHEIN / variante<input name="sku" required maxlength="100" placeholder="Código real de la variante"></label>
      <label class="field">ID del producto SHEIN<input name="source_product_id" required maxlength="100" placeholder="ID real del producto"></label>
@@ -114,7 +101,20 @@
      <label><input type="checkbox" id="manual-eta_17_confirmed" name="eta_17_confirmed">Confirmé que el plazo estimado de 17 días corresponde a la operación real</label>
      <label><input type="checkbox" id="manualVerified">Verifiqué el precio ORIGINAL TACHADO (no el promocional), la talla y la disponibilidad</label>
     </div>
-    <div class="buttons"><button type="submit">Verificar y publicar si cumple los requisitos</button><button type="button" class="light" id="clearProductForm">Limpiar formulario</button></div>
+    <div class="buttons"><button type="submit">Guardar y publicar si cumple los requisitos</button><button type="button" class="light" id="clearProductForm">Limpiar formulario</button></div>
+   </form>
+  </section>
+  <section class="card" aria-labelledby="settingTitle">
+   <h2 id="settingTitle">Reglas de precios SHEIN</h2>
+   <p class="hint">No afectan la perfumería. Todos los importes públicos se muestran en pesos dominicanos. El envío se suma por cada unidad.</p>
+   <form id="settingsForm">
+    <div class="fields">
+     <label class="field">Conversión fija <input id="rateValue" value="RD$65 / US$1" readonly></label>
+     <label class="field">Ganancia fija por artículo (RD$)<input id="marginInput" type="number" min="0" max="100000" step="1" required value="1000"></label>
+     <label class="field">Envío por unidad (RD$)<input id="shippingInput" type="number" min="0" max="100000" step="1" required value="100"></label>
+    </div>
+    <p class="hint">Plazo informado: <b id="leadValue">17 días</b>, sujeto a comprobación de la operación real antes de publicar cada producto.</p>
+    <div class="buttons"><button type="submit">Guardar reglas y recalcular todo</button></div>
    </form>
   </section>
   <section class="card" aria-labelledby="importTitle">
@@ -143,6 +143,6 @@
 <div class="foot">AURA BELLA SHOP · COSTOS Y MÁRGENES PRIVADOS · NUNCA PUBLICAR CREDENCIALES</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/auth-config.js"></script>
-<script src="/admin-shein.js?v=shein8"></script>
+<script src="/admin-shein.js?v=shein10"></script>
 </body>
 </html>
