@@ -116,6 +116,11 @@
   settings=data.settings||settings;
   inventory=data.items||[];
   renderStats();renderInventory();
+  const {data:pending,error:pendingError}=await client.rpc("admin_shein_pending");
+  const target=$("pendingSheinRows");
+  if(pendingError){target.innerHTML='<tr><td colspan="5">No se pudieron consultar los enlaces pendientes.</td></tr>';}
+  else if(!(pending||[]).length){target.innerHTML='<tr><td colspan="5">No hay enlaces pendientes.</td></tr>';}
+  else target.innerHTML=pending.map(r=>'<tr><td>'+esc(r.source_product_id)+'</td><td>'+esc(r.brand_hint+' · '+r.name_hint)+'</td><td>'+esc(({hombre:'Hombre',mujer:'Mujer',ninos:'Niños'})[r.category]||r.category)+'</td><td><span class="pending">'+esc(r.status)+'</span></td><td><a href="'+esc(r.source_url)+'" target="_blank" rel="noopener noreferrer">Abrir producto SHEIN</a></td></tr>').join('');
  }
  async function initial(){
   if(!client){$("adminGate").textContent="Supabase no está configurado.";return;}
