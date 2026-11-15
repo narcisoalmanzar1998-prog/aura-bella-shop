@@ -66,8 +66,8 @@
   <p class="status" id="adminStatus" role="status" aria-live="polite"></p>
   <section class="card" aria-labelledby="pendingSheinTitle">
    <h2 id="pendingSheinTitle">Enlaces SHEIN pendientes de verificar</h2>
-   <p>Productos recibidos para revisión. No están publicados y todavía no tienen precios de venta. Verifica el artículo y las variantes desde SHEIN antes de pasarlo al inventario.</p>
-   <div class="table-scroll"><table><thead><tr><th>ID SHEIN</th><th>Marca / artículo</th><th>Categoría</th><th>Estado</th><th>Enlace original</th></tr></thead><tbody id="pendingSheinRows"><tr><td colspan="5">Cargando pendientes…</td></tr></tbody></table></div>
+   <p>Revisa los productos y pulsa <b>Verificar y publicar</b> para completar el formulario. Solo se publicarán las variantes con precio original tachado comprobado, derechos de imagen, disponibilidad, ruta de entrega y plazo confirmados.</p>
+   <div class="table-scroll"><table><thead><tr><th>ID SHEIN</th><th>Marca / artículo</th><th>Categoría</th><th>Precio original</th><th>Total estimado</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="pendingSheinRows"><tr><td colspan="7">Cargando pendientes…</td></tr></tbody></table></div>
   </section>
   <section class="card" aria-labelledby="settingTitle">
    <h2 id="settingTitle">Reglas de precios SHEIN</h2>
@@ -82,8 +82,8 @@
     <div class="buttons"><button type="submit">Guardar reglas y recalcular todo</button></div>
    </form>
   </section>
-  <section class="card" aria-labelledby="manualTitle">
-   <h2 id="manualTitle">Agregar o actualizar una variante manualmente</h2>
+  <section class="card" id="manualProductSection" aria-labelledby="manualTitle">
+   <h2 id="manualTitle">Verificar y publicar una variante SHEIN</h2><p id="selectedPending" class="alert" hidden></p>
    <p class="hint">Utiliza únicamente imágenes y datos que estés autorizado a publicar. La clave SKU identifica una variante única (talla + color).</p>
    <form id="skuForm">
     <div class="fields">
@@ -92,7 +92,7 @@
      <label class="field">Categoría<select name="category" required><option value="">Seleccionar</option><option value="hombre">Ropa de hombre</option><option value="mujer">Ropa de mujer</option><option value="ninos">Ropa de niños</option></select></label>
      <label class="field">Nombre exacto<input name="title" required maxlength="200"></label>
      <label class="field">Marca original<input name="brand" required maxlength="120"></label>
-     <label class="field">Costo SHEIN en US$<input name="cost_usd" type="number" min="0.01" max="99999" step="0.01" required></label>
+     <label class="field">Precio ORIGINAL TACHADO de SHEIN, en US$ (no el de oferta)<input name="cost_usd" type="number" min="0.01" max="99999" step="0.01" required></label>
      <label class="field">Color<input name="color" required maxlength="80"></label>
      <label class="field">Talla<input name="size" required maxlength="50"></label>
      <label class="field">URL del producto SHEIN<input name="source_url" type="url" required placeholder="https://us.shein.com/..."></label>
@@ -106,14 +106,14 @@
      <label><input type="checkbox" id="manual-image_rights_ok" name="image_rights_ok">Tengo permiso para mostrar esta imagen comercialmente</label>
      <label><input type="checkbox" id="manual-via_usa_confirmed" name="via_usa_confirmed">Confirmé que este artículo se envía mediante mi operación desde Estados Unidos</label>
      <label><input type="checkbox" id="manual-eta_17_confirmed" name="eta_17_confirmed">Confirmé que el plazo estimado de 17 días corresponde a la operación real</label>
-     <label><input type="checkbox" id="manualVerified">Acabo de verificar personalmente la oferta, la presentación, el costo y la disponibilidad</label>
+     <label><input type="checkbox" id="manualVerified">Verifiqué el precio ORIGINAL TACHADO (no el promocional), la talla y la disponibilidad</label>
     </div>
-    <div class="buttons"><button type="submit">Guardar artículo y recalcular precio</button></div>
+    <div class="buttons"><button type="submit">Verificar y publicar si cumple los requisitos</button><button type="button" class="light" id="clearProductForm">Limpiar formulario</button></div>
    </form>
   </section>
   <section class="card" aria-labelledby="importTitle">
    <h2 id="importTitle">Importación y actualización desde archivo autorizado</h2>
-   <p>Importa archivos CSV o JSON autorizados que contengan identificadores, variantes, costo USD, disponibilidad y declaraciones de uso de imágenes. Al repetir un SKU, se actualiza su información y se recalcula el precio automáticamente.</p>
+   <p>Importa archivos CSV o JSON autorizados con precio ORIGINAL TACHADO en USD en la columna <code>cost_usd</code>, nunca el precio promocional. Se verifican permisos, stock y condiciones de envío antes de publicar. Al repetir un SKU, la variante se actualiza.</p>
    <p class="alert"><b>Sin extracción automática no autorizada.</b> El panel no conecta ni descarga el catálogo general de SHEIN por sí solo. Para sincronización automática hará falta acceso formal a una API o un feed que permita esa operación.</p>
    <div class="buttons">
     <button type="button" id="downloadTemplate" class="light">Descargar plantilla CSV</button>
@@ -137,6 +137,6 @@
 <div class="foot">AURA BELLA SHOP · COSTOS Y MÁRGENES PRIVADOS · NUNCA PUBLICAR CREDENCIALES</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/auth-config.js"></script>
-<script src="/admin-shein.js?v=shein4"></script>
+<script src="/admin-shein.js?v=shein5"></script>
 </body>
 </html>
