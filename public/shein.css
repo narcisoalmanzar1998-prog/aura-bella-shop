@@ -1,6 +1,17 @@
 
 /* Aura Bella Shop · módulo SHEIN. Aislado de la perfumería. */
 .apparel-heading{max-width:800px}
+.apparel-heading .apparel-lema{
+ font-family:Georgia,"Times New Roman",serif;
+ font-size:clamp(18px,2.2vw,24px);
+ line-height:1.45;
+ font-style:italic;
+ font-weight:400;
+ letter-spacing:.035em;
+ color:#9b793f;
+ max-width:660px;
+ margin:12px auto 24px;
+}
 .apparel-card{min-height:275px}
 .apparel-products{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:22px}
 .apparel-card.has-shein{grid-column:1/-1;background:#fff;color:#171511;border-color:#d1bb91;min-height:0}
