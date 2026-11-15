@@ -9,7 +9,7 @@
   const details=p=>[p.concentration,p.size?p.size+" ml":null].filter(Boolean).join(", ");
   function productMessage(p){return "Hola! me encantaria pedir: "+p.brand+" "+p.name+(details(p)?" ("+details(p)+")":"")+".\nPrecio: "+money(p.price)+".\n¿Me confirman disponibilidad para realizar el pedido?";}
   function waLink(message){return "https://wa.me/"+PHONE+"?text="+encodeURIComponent(message);}
-  function updateBadge(){const badge=document.getElementById("cartCount");if(badge)badge.textContent=String(cart.reduce((sum,i)=>sum+i.quantity,0));}
+  function updateBadge(){const badge=document.getElementById("cartCount");if(badge)badge.textContent=String(cart.reduce((sum,i)=>sum+i.quantity,0)+(window.auraApparel?.getCartCount?.()||0));}
   const items=()=>cart.map(i=>({p:byId.get(i.id),quantity:i.quantity})).filter(v=>!!v.p);
   function cartMessage(){
     const lines=["Hola! me encantaria pedir:",""];
@@ -27,14 +27,27 @@
     const body=document.getElementById("cartBody");if(!body)return;
     if(loading){body.innerHTML='<p class="shop-help" role="status">Cargando tu carrito seguro…</p>';return;}
     if(!accountUser){body.innerHTML='<p class="shop-help">Inicia sesión y completa tu verificación en dos pasos para consultar el carrito.</p>';return;}
-    if(cartError)body.innerHTML='<div class="shop-warning" role="alert">'+htmlEscape(cartError)+'</div>';
-    else body.innerHTML="";
-    if(!cart.length){body.innerHTML+='<p class="shop-help">Tu carrito está vacío. Explora la colección y agrega tus perfumes favoritos.</p><div class="shop-actions"><button type="button" class="shop-primary" data-close-cart>Seguir comprando</button></div>';return;}
+    body.innerHTML=cartError?'<div class="shop-warning" role="alert">'+htmlEscape(cartError)+'</div>':'';
+    const clothes=window.auraApparel?.getCartCount?.()||0;
+    if(!cart.length&&!clothes){
+      body.innerHTML+='<p class="shop-help">Tu carrito está vacío. Explora perfumes y ropa para agregar tus favoritos.</p><div class="shop-actions"><button type="button" class="shop-primary" data-close-cart>Seguir comprando</button></div>';
+      return;
+    }
     const hasPending=items().some(({p})=>p.price===null);
-    const known=items().reduce((s,{p,quantity})=>s+(p.price===null?0:p.price*quantity),0);
-    body.innerHTML+=(hasPending?'<div class="shop-warning">Hay perfumes por cotizar. Su precio se confirmará por WhatsApp.</div>':"")+
-    items().map(({p,quantity})=>'<div class="shop-cart-item"><img src="'+htmlEscape(p.photo||"")+'" alt="'+htmlEscape(p.name)+'"><div><div class="shop-cart-name">'+htmlEscape(p.brand+" "+p.name)+'</div><div class="shop-cart-small">'+htmlEscape(details(p))+' · '+htmlEscape(money(p.price))+'</div><div class="shop-cart-qty"><button type="button" data-qty-id="'+p.id+'" data-delta="-1" aria-label="Quitar una unidad">−</button><span>'+quantity+'</span><button type="button" data-qty-id="'+p.id+'" data-delta="1" aria-label="Agregar una unidad">+</button></div></div><div><strong>'+htmlEscape(p.price===null?"A cotizar":money(p.price*quantity))+'</strong><div><button class="shop-remove" type="button" data-remove="'+p.id+'">Eliminar</button></div></div></div>').join("")+
-    '<div class="shop-cart-total"><span>Subtotal'+(hasPending?" parcial":"")+'</span><strong>'+htmlEscape(money(known))+'</strong></div><p class="shop-help">Este envío es una solicitud de pedido; confirmaremos inventario, envío y total antes de realizar la venta.</p><div class="shop-actions"><a class="shop-primary" href="'+htmlEscape(waLink(cartMessage()))+'" target="_blank" rel="noopener noreferrer">Pedir carrito en WhatsApp</a><button type="button" data-close-cart class="shop-secondary">Seguir comprando</button></div>';
+    const known=items().reduce((sum,{p,quantity})=>sum+(p.price===null?0:p.price*quantity),0);
+    if(cart.length){
+      body.innerHTML+=(hasPending?'<div class="shop-warning">Hay perfumes por cotizar. Su precio se confirmará por WhatsApp.</div>':'')+
+      '<h3 style="font:normal 24px Georgia,serif">Perfumes</h3>'+
+      items().map(({p,quantity})=>'<div class="shop-cart-item"><img src="'+htmlEscape(p.photo||'')+'" alt="'+htmlEscape(p.name)+'"><div><div class="shop-cart-name">'+htmlEscape(p.brand+' '+p.name)+'</div><div class="shop-cart-small">'+htmlEscape(details(p))+' · '+htmlEscape(money(p.price))+'</div><div class="shop-cart-qty"><button type="button" data-qty-id="'+p.id+'" data-delta="-1" aria-label="Quitar una unidad">−</button><span>'+quantity+'</span><button type="button" data-qty-id="'+p.id+'" data-delta="1" aria-label="Agregar una unidad">+</button></div></div><div><strong>'+htmlEscape(p.price===null?'A cotizar':money(p.price*quantity))+'</strong><div><button class="shop-remove" type="button" data-remove="'+p.id+'">Eliminar</button></div></div></div>').join('')+
+      '<div class="shop-cart-total"><span>Subtotal de perfumes'+(hasPending?' (parcial)':'')+'</span><strong>'+htmlEscape(money(known))+'</strong></div>';
+    }
+    if(clothes)body.innerHTML+=window.auraApparel?.cartHtml?.()||'';
+    body.innerHTML+='<p class="shop-help">Este es un pedido por solicitud. Confirmaremos existencias y condiciones antes de formalizarlo. El envío SHEIN se calcula por unidad, y no se aplica automáticamente a los perfumes.</p>';
+    if(clothes){
+      body.innerHTML+='<div class="shop-actions"><button type="button" class="shop-primary shein-checkout-button" data-checkout-clothing-cart>Pedir carrito en WhatsApp</button><button type="button" data-close-cart class="shop-secondary">Seguir comprando</button></div>';
+    }else{
+      body.innerHTML+='<div class="shop-actions"><a class="shop-primary" href="'+htmlEscape(waLink(cartMessage()))+'" target="_blank" rel="noopener noreferrer">Pedir carrito en WhatsApp</a><button type="button" data-close-cart class="shop-secondary">Seguir comprando</button></div>';
+    }
   }
   function closeCart(){layer.classList.remove("is-open");layer.setAttribute("aria-hidden","true");document.body.style.overflow="";opener?.focus?.();}
   async function openCart(){
@@ -86,6 +99,7 @@
   document.addEventListener("click",e=>{
     const add=e.target.closest("[data-add]");if(add){addProductClicked(add);return;}
     if(e.target.closest("#cartToggle")){openCart();return;}
+    if(e.target.closest("[data-checkout-clothing-cart]")){window.auraApparel?.checkoutCart?.(items());return;}
     if(e.target.closest("[data-close-cart]")){closeCart();return;}
     const qty=e.target.closest("[data-qty-id]");if(qty){change(qty.dataset.qtyId,Number(qty.dataset.delta));return;}
     const remove=e.target.closest("[data-remove]");if(remove){change(remove.dataset.remove,0,true);return;}
@@ -94,5 +108,5 @@
   layer.addEventListener("click",e=>{if(e.target===layer)closeCart();});
   document.addEventListener("keydown",e=>{if(e.key==="Escape"&&layer.classList.contains("is-open"))closeCart();});
   updateBadge();
-  window.auraShop={setSession,openCart,add,waLink,cartMessage,productMessage,number:PHONE};
+  window.auraShop={setSession,openCart,add,waLink,cartMessage,productMessage,number:PHONE,refreshCart:()=>{updateBadge();render();}};
 })();
