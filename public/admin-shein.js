@@ -8,7 +8,7 @@
  const categories={hombre:"Hombre",mujer:"Mujer",ninos:"Niños"};
  const fields=["sku","source_product_id","category","title","brand","description","color","size","cost_usd","source_url","image_url","available","enabled","source_authorized","image_rights_ok","via_usa_confirmed","eta_17_confirmed","verified_at"];
  const flags=["available","enabled","source_authorized","image_rights_ok","via_usa_confirmed","eta_17_confirmed"];
- let inventory=[],settings={exchange_rate:65,margin_rd:1000,shipping_rd:100,lead_days:17},incoming=[],busy=false;
+ let inventory=[],settings={exchange_rate:65,margin_rd:1000,shipping_rd:100,lead_days:17},incoming=[],busy=false,pendingList=[],selectedPendingId=null;
  function status(message,isError=false){
   const el=$("adminStatus");
   el.textContent=message;el.classList.toggle("error",isError);
@@ -34,7 +34,7 @@
   obj.source_url=String(obj.source_url).trim();
   obj.image_url=String(obj.image_url).trim();
   const cost=String(obj.cost_usd).trim();
-  if(!/^\d{1,6}(\.\d{1,2})?$/.test(cost)||Number(cost)<=0)throw Error("Costo USD incorrecto en fila "+(index+1));
+  if(!/^\d{1,6}(\.\d{1,2})?$/.test(cost)||Number(cost)<=0)throw Error("Precio original tachado inválido en fila "+(index+1));
   obj.cost_usd=Number(cost).toFixed(2);
   if(!categories[obj.category]||!obj.sku||!obj.source_product_id||!obj.title||!obj.brand||!obj.color||!obj.size)throw Error("Datos de producto incompletos en fila "+(index+1));
   if(!/^https:\/\/([a-z0-9-]+\.)*shein\.com\//i.test(obj.source_url))throw Error("El enlace debe ser un producto SHEIN válido. Fila "+(index+1));
@@ -76,7 +76,7 @@
  function preview(){
    const target=$("csvPreview");
    if(!incoming.length){target.innerHTML='<p class="hint">Selecciona un CSV o JSON autorizado para revisar sus variantes antes de importar.</p>';$("csvImport").disabled=true;return;}
-   const h='<tr><th>SKU</th><th>Artículo</th><th>Variante</th><th>Costo USD</th><th>Venta RD$</th><th>Estado</th></tr>';
+   const h='<tr><th>SKU</th><th>Artículo</th><th>Variante</th><th>Original USD</th><th>Venta RD$</th><th>Estado</th></tr>';
    const result=incoming.slice(0,8).map(r=>{
     const price=Math.round(Number(r.cost_usd)*65+Number(settings.margin_rd));
     return '<tr><td>'+esc(r.sku)+'</td><td>'+esc(r.brand+' '+r.title)+'</td><td>'+esc(r.color+' / '+r.size)+'</td><td>US$'+esc(r.cost_usd)+'</td><td>'+rd(price)+'</td><td>'+esc(draftStatus(r))+'</td></tr>';
@@ -98,7 +98,7 @@
   const search=$("inventorySearch").value.trim().toLowerCase();
   const filtered=inventory.filter(r=>[r.sku,r.title,r.brand,r.color,r.size].join(" ").toLowerCase().includes(search));
   const table=$("inventoryTable");
-  const head='<tr><th>SKU</th><th>Producto · variante</th><th>Costo SHEIN</th><th>Venta</th><th>Envío</th><th>Total</th><th>Estado</th><th>Acción</th></tr>';
+  const head='<tr><th>SKU</th><th>Producto · variante</th><th>Original SHEIN</th><th>Venta</th><th>Envío</th><th>Total</th><th>Estado</th><th>Acción</th></tr>';
   const body=filtered.slice(0,250).map(r=>{
    const sell=Math.round(Number(r.cost_usd)*65+Number(settings.margin_rd));
    const publish=draftStatus(r)==="Publicable";
@@ -117,10 +117,22 @@
   inventory=data.items||[];
   renderStats();renderInventory();
   const {data:pending,error:pendingError}=await client.rpc("admin_shein_pending");
+  pendingList=pendingError?[]:(pending||[]);
   const target=$("pendingSheinRows");
-  if(pendingError){target.innerHTML='<tr><td colspan="5">No se pudieron consultar los enlaces pendientes.</td></tr>';}
-  else if(!(pending||[]).length){target.innerHTML='<tr><td colspan="5">No hay enlaces pendientes.</td></tr>';}
-  else target.innerHTML=pending.map(r=>'<tr><td>'+esc(r.source_product_id)+'</td><td>'+esc(r.brand_hint+' · '+r.name_hint)+'</td><td>'+esc(({hombre:'Hombre',mujer:'Mujer',ninos:'Niños'})[r.category]||r.category)+'</td><td><span class="pending">'+esc(r.status)+'</span></td><td><a href="'+esc(r.source_url)+'" target="_blank" rel="noopener noreferrer">Abrir producto SHEIN</a></td></tr>').join('');
+  if(pendingError){target.innerHTML='<tr><td colspan="7">No se pudieron consultar los enlaces pendientes.</td></tr>';}
+  else if(!pendingList.length){target.innerHTML='<tr><td colspan="7">No hay enlaces pendientes.</td></tr>';}
+  else target.innerHTML=pendingList.map(p=>{
+   const orig=p.regular_price_usd==null?null:Number(p.regular_price_usd);
+   const base=orig==null?null:Math.round(orig*Number(settings.exchange_rate)+Number(settings.margin_rd));
+   const total=base==null?null:base+Number(settings.shipping_rd);
+   const approved=p.status==="revisado";
+   return '<tr><td>'+esc(p.source_product_id)+'</td><td><b>'+esc(p.brand_hint+' · '+p.name_hint)+'</b><small>'+esc(p.variant_notes||p.note||'')+'</small></td>'+
+   '<td>'+esc(categories[p.category]||p.category)+'</td><td>'+(orig==null?'Por verificar':'US$'+orig.toFixed(2))+'</td>'+
+   '<td>'+(total==null?'Pendiente':rd(total)+' (referencia interna)')+'</td>'+
+   '<td><span class="'+(approved?'ok':'pending')+'">'+(approved?'Revisado':'Pendiente')+'</span></td>'+
+   '<td><button type="button" data-review-pending="'+esc(p.source_product_id)+'">'+(approved?'Agregar variante':'Verificar y publicar')+'</button> '+
+   '<a href="'+esc(p.source_url)+'" target="_blank" rel="noopener noreferrer">Ver SHEIN</a></td></tr>';
+  }).join('');
  }
  async function initial(){
   if(!client){$("adminGate").textContent="Supabase no está configurado.";return;}
@@ -141,6 +153,34 @@
   catch(e){status(e.message||"No se pudieron guardar los cambios.",true);}
   finally{busy=false;}
  }
+ function resetSelection(){
+   selectedPendingId=null;
+   $("selectedPending").hidden=true;
+   $("skuForm").reset();
+ }
+ $("clearProductForm").addEventListener("click",resetSelection);
+ $("pendingSheinRows").addEventListener("click",e=>{
+   const btn=e.target.closest("[data-review-pending]");
+   if(!btn)return;
+   const p=pendingList.find(r=>r.source_product_id===btn.dataset.reviewPending);
+   if(!p)return;
+   resetSelection();selectedPendingId=p.source_product_id;
+   const form=$("skuForm");
+   for(const [key,value] of Object.entries({
+    source_product_id:p.source_product_id,category:p.category,title:p.name_hint,
+    brand:p.brand_hint,source_url:p.source_url,
+    cost_usd:p.regular_price_usd??""
+   })){
+    const field=form.elements.namedItem(key);
+    if(field)field.value=value;
+   }
+   $("selectedPending").hidden=false;
+   $("selectedPending").textContent="Revisando referencia SHEIN "+p.source_product_id+
+    ". El precio original "+(p.regular_price_usd==null?"aún necesita verificarse":"registrado es US$"+Number(p.regular_price_usd).toFixed(2))+
+    ". Completa el SKU de esta variante, color, talla, imagen permitida y los controles de verificación. No se activa nada sin esas confirmaciones.";
+   document.getElementById("manualProductSection").scrollIntoView({behavior:"smooth",block:"start"});
+   form.elements.namedItem("sku")?.focus();
+ });
  $("settingsForm").addEventListener("submit",e=>{
   e.preventDefault();
   const m=Number($("marginInput").value),ship=Number($("shippingInput").value);
@@ -153,14 +193,25 @@
  $("skuForm").addEventListener("submit",e=>{
   e.preventDefault();const fd=Object.fromEntries(new FormData(e.target).entries());
   for(const f of flags)fd[f]=$("manual-"+f).checked;
-  if(!$("manualVerified").checked){status("Confirma que verificaste realmente la oferta y sus datos.",true);return;}
+  if(!$("manualVerified").checked){status("Confirma que verificaste el precio original tachado, el tamaño o talla y la disponibilidad.",true);return;}
   fd.verified_at=new Date().toISOString();
   let input;
   try{input=normalize(fd,0);}catch(e){status(e.message,true);return;}
+  if(selectedPendingId&&input.source_product_id!==selectedPendingId){
+   status("El ID del producto seleccionado no coincide con la referencia en revisión.",true);return;
+  }
+  if(input.enabled&&!(input.available&&input.source_authorized&&input.image_rights_ok&&input.via_usa_confirmed&&input.eta_17_confirmed&&input.image_url)){
+   status("Para publicar debes confirmar disponibilidad, permisos de catálogo e imagen, ruta desde EE. UU., plazo de 17 días y URL de imagen autorizada. Sin eso, guarda la variante desactivada.",true);return;
+  }
+  if(input.enabled&&!confirm("¿Confirmas que verificaste el precio ORIGINAL TACHADO, la variante, los derechos de uso de imágenes y el plazo de entrega? La variante aparecerá en la tienda si cumple los requisitos."))return;
   run(async()=>{
    const {error}=await client.rpc("admin_shein_import",{p_rows:[input]});
    if(error)throw error;
-   $("skuForm").reset();
+   if(selectedPendingId&&input.enabled){
+     const mark=await client.rpc("admin_shein_mark_reviewed",{p_source_product_id:selectedPendingId});
+     if(mark.error)throw mark.error;
+   }
+   resetSelection();
   });
  });
  $("fileImport").addEventListener("change",async e=>{
@@ -173,7 +224,7 @@
     incoming=data.map(normalize);
     if(incoming.length>2000)throw Error("Usa un archivo con máximo 2,000 variantes por importación.");
     if(new Set(incoming.map(r=>r.sku)).size!==incoming.length)throw Error("El archivo contiene SKU duplicados.");
-    status(incoming.length+" variantes revisadas. Verifica las licencias y los precios antes de importar.");
+    status(incoming.length+" variantes preparadas. Asegúrate de que cost_usd contiene el precio ORIGINAL TACHADO, no el promocional.");
    }catch(err){incoming=[];status(err.message,true);}
    preview();
  });
