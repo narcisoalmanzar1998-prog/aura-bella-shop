@@ -191,6 +191,17 @@
    const a=document.createElement("a");a.href=url;a.download="plantilla_shein_aura_bella.csv";
    document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
  });
+ $("exportInventory").addEventListener("click",()=>{
+  if(!inventory.length){status("Todavía no hay variantes para exportar.",true);return;}
+  const csvCell=v=>'"'+String(v??"").replace(/"/g,'""')+'"';
+  const out=[fields.join(",")];
+  for(const item of inventory)out.push(fields.map(key=>csvCell(item[key])).join(","));
+  const blob=new Blob(["\uFEFF"+out.join("\r\n")],{type:"text/csv;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");a.href=url;a.download="AURA_BELLA_SHEIN_INVENTARIO_PRIVADO.csv";
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  status("Archivo privado exportado. No lo compartas públicamente: contiene costos SHEIN en USD.");
+ });
  $("inventorySearch").addEventListener("input",renderInventory);
  $("refreshInventory").addEventListener("click",()=>run(async()=>{}));
  $("inventoryTable").addEventListener("click",e=>{
