@@ -83,16 +83,16 @@
   <section class="card" id="manualProductSection" aria-labelledby="manualTitle">
    <h2 id="manualTitle">Verificar y publicar una variante SHEIN</h2><p class="hint">Esta sección se abre al seleccionar una referencia en la tabla anterior. Puedes guardar el artículo y sus fotos como borrador aunque falten datos. Solo se exigirá completar la información y las verificaciones cuando quieras publicarlo.</p><p id="selectedPending" class="alert" hidden></p>
    <p class="hint">Utiliza únicamente imágenes y datos que estés autorizado a publicar. La clave SKU identifica una variante única (talla + color).</p>
-   <form id="skuForm" novalidate><div id="skuFormAlert" role="alert" class="alert" hidden style="margin-bottom:15px;border-left-color:#bb543e"></div>
+   <p class="hint">Para publicar: pega el enlace SHEIN, introduce el SKU y las tallas, selecciona tus fotos y confirma las casillas. <strong>Un único clic en «Verificar y publicar» subirá las fotos y creará las variantes automáticamente.</strong> No necesitas rellenar manualmente el ID del producto ni copiar enlaces de fotos.</p><form id="skuForm" novalidate><div id="skuFormAlert" role="alert" class="alert" hidden style="margin-bottom:15px;border-left-color:#bb543e"></div>
     <div class="fields">
-     <label class="field">SKU SHEIN / variante<input name="sku" required maxlength="100" placeholder="Código real de la variante"></label>
-     <label class="field">ID del producto SHEIN<input name="source_product_id" required maxlength="100" placeholder="ID real del producto"></label>
+     <label class="field">SKU / código base del artículo<input name="sku" required maxlength="100" placeholder="Ej.: sm251206112677706174"></label>
+     <label class="field">ID del producto SHEIN (automático desde el enlace)<input name="source_product_id" required maxlength="100" readonly placeholder="Se obtiene del enlace SHEIN"></label>
      <label class="field">Categoría<select name="category" required><option value="">Seleccionar</option><option value="hombre">Ropa de hombre</option><option value="mujer">Ropa de mujer</option><option value="ninos">Ropa de niños</option></select></label>
      <label class="field">Nombre exacto<input name="title" required maxlength="200"></label>
      <label class="field">Marca original<input name="brand" required maxlength="120"></label>
      <label class="field">Precio ORIGINAL TACHADO de SHEIN, en US$ (no el de oferta)<input name="cost_usd" type="number" min="0.01" max="99999" step="0.01" required></label>
      <label class="field">Color<input name="color" required maxlength="80"></label>
-     <label class="field">Talla<input name="size" required maxlength="50"></label>
+     <label class="field">Talla o tallas disponibles, separadas por coma<input name="size" required maxlength="120"></label>
      <label class="field">URL del producto SHEIN<input name="source_url" type="url" required placeholder="https://us.shein.com/..."></label>
      <label class="field">URL de imagen autorizada (opcional si la subes)<input name="image_url" type="url" placeholder="https://..."></label>
      <label class="field" style="grid-column:1/-1">Descripción<textarea name="description" maxlength="3000"></textarea></label><div style="grid-column:1/-1;padding:16px;background:#fbf6e9;border:1px solid #ddc8a2"><label class="field" for="approvedPhotoFile">📷 Subir foto PROPIA o con permiso comercial (sin copiar URL)<input id="approvedPhotoFile" type="file" accept="image/jpeg,image/png,image/webp" multiple aria-describedby="approvedPhotoHelp"></label><p class="hint" id="approvedPhotoHelp">Puedes seleccionar hasta 12 fotos juntas o en varias tandas, aunque falten campos del producto (máximo 8 MB por foto). Usa «Guardar borrador y fotos privadas» para conservarlas sin publicar. Solo utiliza «Subir fotos autorizadas» cuando tengas permiso comercial para mostrarlas al público.</p><div class="buttons"><button type="button" id="uploadReviewFromForm" class="light">Guardar fotos para revisión privada</button><button type="button" id="uploadApprovedPhoto" class="light">Subir fotos autorizadas para la tienda</button></div><div id="approvedPhotoPreview" class="admin-photo-gallery" style="margin-top:12px" aria-live="polite"></div></div>
@@ -106,7 +106,7 @@
      <label><input type="checkbox" id="manual-eta_17_confirmed" name="eta_17_confirmed">Confirmé que el plazo estimado de 17 días corresponde a la operación real</label>
      <label><input type="checkbox" id="manualVerified">Verifiqué el precio ORIGINAL TACHADO (no el promocional), la talla y la disponibilidad</label>
     </div>
-    <div class="buttons"><button type="button" id="saveSheinDraft" class="light">Guardar borrador y fotos privadas (aunque falten campos)</button><button type="submit">Verificar y publicar cuando esté completo</button><button type="button" class="light" id="clearProductForm">Limpiar formulario</button></div>
+    <div class="buttons"><button type="button" id="saveSheinDraft" class="light">Guardar borrador y fotos privadas (aunque falten campos)</button><button type="submit">Subir fotos y publicar producto</button><button type="button" class="light" id="clearProductForm">Limpiar formulario</button></div>
    </form>
   </section>
   <section class="card" aria-labelledby="settingTitle">
@@ -148,6 +148,6 @@
 <div class="foot">AURA BELLA SHOP · COSTOS Y MÁRGENES PRIVADOS · NUNCA PUBLICAR CREDENCIALES</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/auth-config.js"></script>
-<script src="/admin-shein.js?v=shein12"></script>
+<script src="/admin-shein.js?v=shein13"></script>
 </body>
 </html>
