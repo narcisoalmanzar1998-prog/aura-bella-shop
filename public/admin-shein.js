@@ -572,12 +572,12 @@
    if(hit(/\b(cargo pants?|cargo trousers?)\b/))noun="Pantalón cargo";
    else if(hit(/\b(jeans?|denim pants?|denim trousers?)\b/))noun="Pantalón vaquero";
    else if(hit(/\b(joggers?|sweatpants?|trousers?|pants?|leggings?)\b/))noun="Pantalón";
-   else if(hit(/\b(shorts?|bermudas?)\b/))noun="Pantalón corto";
+   else if(hit(/\b(shorts|bermudas?)\b/))noun="Pantalón corto";
    else if(hit(/\b(t shirts?|tshirt|tee shirts?|tees?)\b/)){noun="Camiseta";female=true;upper=true;}
    else if(hit(/\b(tank tops?|camisoles?)\b/)){noun="Camiseta sin mangas";female=true;upper=true;}
    else if(hit(/\b(blouses?)\b/)){noun="Blusa";female=true;upper=true;}
    else if(hit(/\b(shirts?)\b/)){noun="Camisa";female=true;upper=true;}
-   else if(hit(/\b(dresses?)\b/)){noun="Vestido";}
+   else if(hit(/\b(dress|dresses)\b/)){noun="Vestido";}
    else if(hit(/\b(skirts?)\b/)){noun="Falda";female=true;}
    else if(hit(/\b(hoodies?)\b/)){noun="Sudadera con capucha";female=true;}
    else if(hit(/\b(sweatshirts?)\b/)){noun="Sudadera";female=true;}
@@ -617,7 +617,7 @@
    if(hit(/\b(multiple pockets|multi pockets|multi pocket|multi-pocket)\b/))
      parts.push("con varios bolsillos");
    if(hit(/\b(elastic waist|elastic waistband)\b/))
-     parts.push("con cintura elástica");
+     parts.push(hit(/\b(multiple pockets|multi pockets|multi pocket|multi-pocket)\b/)?"y cintura elástica":"con cintura elástica");
    if(hit(/\b(button down|button front)\b/))
      parts.push("con botones");
    if(hit(/\b(los angeles)\b/))parts.push("con inscripción «Los Angeles»");
