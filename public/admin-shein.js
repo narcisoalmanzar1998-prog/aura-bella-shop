@@ -215,8 +215,47 @@
    out.source_product_id=selectedPendingId||out.source_product_id;
    return out;
  }
+ async function ensureReferenceFromForm(){
+   const form=$("skuForm");
+   const id=syncProductId(form);
+   const source_url=String(form.elements.namedItem("source_url")?.value||"").trim();
+   const category=String(form.elements.namedItem("category")?.value||"").trim();
+   const title=String(form.elements.namedItem("title")?.value||"").trim();
+   const brand=String(form.elements.namedItem("brand")?.value||"").trim();
+   const rawPrice=String(form.elements.namedItem("cost_usd")?.value||"").trim();
+   if(!id){
+     formError("Pega primero un enlace SHEIN del producto que termine en -p-123456.html.");
+     return null;
+   }
+   if(!category||!title||!brand){
+     formError("Para guardar fotos o borrador, indica categoría, nombre del artículo y marca. Los demás campos pueden quedar vacíos.");
+     return null;
+   }
+   if(rawPrice&&(!/^\d{1,6}(\.\d{1,2})?$/.test(rawPrice)||Number(rawPrice)<=0)){
+     formError("El precio original debe ser positivo y tener hasta dos decimales.");
+     return null;
+   }
+   const prepared=await client.rpc("admin_shein_prepare_reference",{
+      p_source_url:source_url,p_category:category,p_brand:brand,p_title:title,
+      p_regular_usd:rawPrice?Number(rawPrice):null
+   });
+   if(prepared.error){
+     formError("No se pudo registrar la referencia: "+prepared.error.message);
+     return null;
+   }
+   if(String(prepared.data?.product_id)!==id){
+      formError("El identificador del producto no coincide con el enlace.");
+      return null;
+   }
+   selectedPendingId=id;
+   await load();
+   return id;
+ }
  async function saveDraftInternal(){
-   if(!selectedPendingId){formError("Primero elige el producto con «Verificar y publicar» para guardar un borrador.");return false;}
+   if(!selectedPendingId){
+      const id=await ensureReferenceFromForm();
+      if(!id)return false;
+   }
    const id=String($("skuForm").elements.namedItem("source_product_id")?.value??"").trim();
    if(id!==selectedPendingId){formError("El ID SHEIN no coincide con la referencia seleccionada. No se guardó.");return false;}
    try{
@@ -232,7 +271,10 @@
    }
  }
  async function saveDraftWithPhotos(){
-   if(!selectedPendingId){formError("Selecciona primero un producto pendiente.");return;}
+   if(!selectedPendingId){
+     const id=await ensureReferenceFromForm();
+     if(!id)return;
+   }
    const files=Array.from($("approvedPhotoFile").files||[]);
    if(files.length){
      const uploaded=await uploadImages(selectedPendingId,"review",files);
@@ -371,7 +413,10 @@
  });
 
  $("uploadReviewFromForm").addEventListener("click",async()=>{
-   if(!selectedPendingId){formError("Primero selecciona una referencia SHEIN para adjuntar imágenes.");return;}
+   if(!selectedPendingId){
+     const id=await ensureReferenceFromForm();
+     if(!id)return;
+   }
    const files=Array.from(approvedFile.files||[]);
    if(!files.length){formError("Selecciona una o varias fotos antes de pulsar guardar.");return;}
    const ok=await uploadImages(selectedPendingId,"review",files);
@@ -380,9 +425,10 @@
  $("saveSheinDraft").addEventListener("click",saveDraftWithPhotos);
 
  $("uploadApprovedPhoto").addEventListener("click",async()=>{
-   const id=String($("skuForm").elements.namedItem("source_product_id")?.value||"").trim();
+   let id=String($("skuForm").elements.namedItem("source_product_id")?.value||"").trim();
    if(!selectedPendingId||selectedPendingId!==id){
-     status("Primero pulsa «Verificar y publicar» en el producto pendiente.",true);return;
+     id=await ensureReferenceFromForm();
+     if(!id)return;
    }
    const files=Array.from(approvedFile.files||[]);
    if(!files.length){status("Selecciona varias fotos propias o autorizadas desde tu celular.",true);return;}
