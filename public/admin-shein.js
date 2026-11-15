@@ -8,7 +8,7 @@
  const categories={hombre:"Hombre",mujer:"Mujer",ninos:"Niños"};
  const fields=["sku","source_product_id","category","title","brand","description","color","size","cost_usd","source_url","image_url","available","enabled","source_authorized","image_rights_ok","via_usa_confirmed","eta_17_confirmed","verified_at"];
  const flags=["available","enabled","source_authorized","image_rights_ok","via_usa_confirmed","eta_17_confirmed"];
- let inventory=[],settings={exchange_rate:65,margin_rd:1000,shipping_rd:100,lead_days:17},incoming=[],busy=false,pendingList=[],selectedPendingId=null;
+ let inventory=[],settings={exchange_rate:65,margin_rd:1000,shipping_rd:100,lead_days:17},incoming=[],busy=false,pendingList=[],selectedPendingId=null,selectedPhotoId=null;
  function status(message,isError=false){
   const el=$("adminStatus");
   el.textContent=message;el.classList.toggle("error",isError);
@@ -131,6 +131,8 @@
    '<td>'+(total==null?'Pendiente':rd(total)+' (referencia interna)')+'</td>'+
    '<td><span class="'+(approved?'ok':'pending')+'">'+(approved?'Revisado':'Pendiente')+'</span></td>'+
    '<td><button type="button" data-review-pending="'+esc(p.source_product_id)+'">'+(approved?'Agregar variante':'Verificar y publicar')+'</button> '+
+   '<button type="button" data-shein-attach-photo="'+esc(p.source_product_id)+'">Adjuntar foto</button> '+
+   (p.review_photo_path?'<button type="button" data-shein-see-photo="'+esc(p.source_product_id)+'">Ver foto privada</button> ':'')+
    '<a href="'+esc(p.source_url)+'" target="_blank" rel="noopener noreferrer">Ver SHEIN</a></td></tr>';
   }).join('');
  }
@@ -158,6 +160,59 @@
    $("selectedPending").hidden=true;
    $("skuForm").reset();
  }
+
+ const reviewFile=$("sheinReviewFile");
+ $("pendingSheinRows").addEventListener("click",async e=>{
+  const attach=e.target.closest("[data-shein-attach-photo]");
+  if(attach){
+   selectedPhotoId=attach.dataset.sheinAttachPhoto;
+   if(!pendingList.some(p=>p.source_product_id===selectedPhotoId))return;
+   reviewFile.value="";
+   reviewFile.click();
+   return;
+  }
+  const see=e.target.closest("[data-shein-see-photo]");
+  if(see){
+   const item=pendingList.find(p=>p.source_product_id===see.dataset.sheinSeePhoto);
+   if(!item?.review_photo_path)return;
+   const {data,error}=await client.storage.from("shein-review").createSignedUrl(item.review_photo_path,600);
+   if(error){status("No se pudo abrir la fotografía privada: "+error.message,true);return;}
+   const target=$("sheinReviewPreview");
+   const photoUrl=data?.signedUrl||"";
+   if(!/^https:\/\/[a-z0-9.-]+\/storage\/v1\/object\/sign\//i.test(photoUrl)){
+      status("La URL de visualización privada no es válida.",true);return;
+   }
+   target.innerHTML='<div class="alert"><b>Foto privada de revisión · '+esc(item.source_product_id)+'</b>'+
+      '<p>No se muestra al público. Confirma derechos de uso antes de publicar.</p>'+
+      '<img alt="Foto de revisión del producto" style="width:100%;max-width:330px;max-height:420px;object-fit:contain;border:1px solid #ded3c1;background:white" src="'+esc(photoUrl)+'"></div>';
+   target.scrollIntoView({behavior:"smooth",block:"nearest"});
+  }
+ });
+ reviewFile.addEventListener("change",async()=>{
+   const file=reviewFile.files?.[0];
+   const productId=selectedPhotoId;
+   if(!file||!productId)return;
+   if(!["image/jpeg","image/png","image/webp"].includes(file.type) || file.size>8388608 || file.size<1){
+      status("La fotografía debe ser JPG, PNG o WEBP, con un tamaño máximo de 8 MB.",true);return;
+   }
+   if(!/^\d{1,25}$/.test(productId)){status("Identificador SHEIN inválido.",true);return;}
+   const ext=({"image/jpeg":"jpg","image/png":"png","image/webp":"webp"})[file.type];
+   const path=productId+"/"+crypto.randomUUID()+"."+ext;
+   status("Guardando la foto en el espacio privado de revisión…");
+   try{
+      const uploaded=await client.storage.from("shein-review").upload(path,file,{upsert:false,contentType:file.type});
+      if(uploaded.error)throw uploaded.error;
+      const linked=await client.rpc("admin_shein_set_review_photo",{p_source_product_id:productId,p_storage_path:path});
+      if(linked.error){
+        await client.storage.from("shein-review").remove([path]);
+        throw linked.error;
+      }
+      await load();
+      status("Fotografía guardada para revisión privada del artículo "+productId+". No está publicada en Aura Bella Shop.");
+   }catch(err){status("No se pudo adjuntar la foto: "+(err?.message||"error de conexión"),true);}
+   finally{selectedPhotoId=null;reviewFile.value="";}
+ });
+
  $("clearProductForm").addEventListener("click",resetSelection);
  $("pendingSheinRows").addEventListener("click",e=>{
    const btn=e.target.closest("[data-review-pending]");
