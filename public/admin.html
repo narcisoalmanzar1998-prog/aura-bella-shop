@@ -75,6 +75,30 @@
    <div class="tile"><strong id="adminDrafts">0</strong><span>En revisión</span></div>
   </div>
   <p class="status" id="adminStatus" role="status" aria-live="polite"></p>
+  <section class="card" aria-labelledby="sheinLinkImporterTitle">
+    <h2 id="sheinLinkImporterTitle">Importar productos desde enlaces SHEIN</h2>
+    <p>Solo pega los enlaces de los productos, uno por línea. El panel detecta automáticamente su ID, propone nombre, marca y categoría, y los guarda en <strong>Pendientes</strong> sin duplicados. Acepta hasta <strong>50 enlaces por lote</strong>.</p>
+    <label class="field" for="sheinBulkUrls">Enlaces de productos SHEIN
+      <textarea id="sheinBulkUrls" rows="5" spellcheck="false" placeholder="https://us.shein.com/...-p-575295553.html&#10;https://us.shein.com/...-p-569713513.html"></textarea>
+    </label>
+    <div class="fields">
+      <label class="field" for="sheinBulkCategory">Categoría cuando el enlace no permita identificarla
+        <select id="sheinBulkCategory">
+          <option value="">Detectar automáticamente (pedir selección si es necesario)</option>
+          <option value="hombre">Ropa de hombre</option>
+          <option value="mujer">Ropa de mujer</option>
+          <option value="ninos">Ropa de niños</option>
+        </select>
+      </label>
+    </div>
+    <div class="buttons">
+      <button type="button" id="sheinAnalyzeLinks" class="light">Analizar enlaces</button>
+      <button type="button" id="sheinImportLinks">Agregar productos al panel</button>
+    </div>
+    <p class="status" id="sheinBulkStatus" role="status" aria-live="polite"></p>
+    <div id="sheinBulkPreview" class="table-scroll" aria-live="polite"></div>
+    <p class="hint"><strong>Importante:</strong> aquí se prepara la ficha a partir de la dirección web; no se extraen automáticamente precios, fotografías, tallas ni existencias sin acceso autorizado a esos datos. Las fichas quedan sin publicar para que completes el precio original tachado y las imágenes con permiso comercial.</p>
+  </section>
   <section class="card" aria-labelledby="pendingSheinTitle">
    <h2 id="pendingSheinTitle">Enlaces SHEIN pendientes y en revisión</h2>
    <p>Desde esta lista puedes <b>editar</b> una referencia o <b>eliminarla</b> definitivamente. Si el producto ya tiene una variante en el inventario, elimina primero esa variante desde el apartado inferior. Las fotografías que guardaste para revisión permanecen privadas hasta que autorices su publicación.</p>
@@ -148,6 +172,6 @@
 <div class="foot">AURA BELLA SHOP · COSTOS Y MÁRGENES PRIVADOS · NUNCA PUBLICAR CREDENCIALES</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/auth-config.js"></script>
-<script src="/admin-shein.js?v=shein16"></script>
+<script src="/admin-shein.js?v=shein17"></script>
 </body>
 </html>
