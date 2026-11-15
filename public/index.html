@@ -15,14 +15,80 @@ a{text-decoration:none;color:inherit}button,input,select{font:inherit}button{cur
 .modal-overlay{position:fixed;inset:0;background:#000a;z-index:20;display:none;align-items:center;justify-content:center;padding:20px}.modal-overlay.open{display:flex}.modal{width:min(930px,100%);max-height:92vh;overflow:auto;background:white;position:relative;box-shadow:0 25px 80px #0007;animation:pop .2s ease}.modal-main{display:grid;grid-template-columns:40% 60%}.modal-pic{background:#f8f7f4;display:grid;place-items:center;min-height:420px;padding:22px}.modal-pic img{width:100%;max-height:410px;object-fit:contain}.modal-info{padding:42px 45px}.modal h2{font:normal 35px Georgia,serif;margin:10px 0 6px}.modal p{font-size:13px;color:#706a61;line-height:1.65}.modal-close{position:absolute;top:16px;right:18px;font-size:24px;border:0;background:white;z-index:3}.notes{display:grid;gap:13px;margin-top:23px}.note{border-left:2px solid var(--gold);padding:2px 0 2px 14px}.note b{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#9a7d4b}.note p{margin:6px 0 0}.modal-actions{margin-top:23px;display:flex;gap:10px;flex-wrap:wrap}.modal-actions a{padding:13px 17px;border:1px solid #222;background:#171717;color:#fff;font-size:11px;text-transform:uppercase;letter-spacing:.1em}.modal-actions a:last-child{background:white;color:#222}.secondary{font-size:11px!important;color:#8b8275!important}
 @keyframes pop{from{transform:translateY(12px);opacity:.8}to{transform:none;opacity:1}}@media(max-width:1050px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:730px){.navlinks{display:none}.hero{padding:60px 22px;min-height:400px}.hero h2{font-size:46px}.metrics{grid-template-columns:repeat(2,1fr)}.metric:nth-child(2){border-right:0}.metric:nth-child(-n+2){border-bottom:1px solid var(--line)}.toolbar{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.wrap{padding:0 13px}.photo{height:210px}.product-body{padding:13px}.product h3{font-size:18px;min-height:45px}.section-intro h2{font-size:35px}.modal-main{grid-template-columns:1fr}.modal-pic{min-height:240px;max-height:290px}.modal-pic img{max-height:250px}.modal-info{padding:27px}.summary-inner{grid-template-columns:1fr}}@media(max-width:420px){.grid{grid-template-columns:1fr 1fr;gap:9px}.photo{height:175px}.toolbar{grid-template-columns:1fr}.product-body{padding:11px}.product h3{font-size:16px;min-height:38px}.buttons button,.buttons a{font-size:9px;padding:10px 4px}.maker{font-size:11px}}
 .brand-logo{width:50px;height:50px;object-fit:cover;border-radius:50%;display:block;flex-shrink:0}@media(max-width:730px){.brand-logo{width:38px;height:38px}}
+
+/* Departamentos: perfumes activos y tres colecciones de ropa sin artículos */
+.department-nav{background:#f5f1e8;border-bottom:1px solid #e0d8c8}
+.department-nav-inner{max-width:1280px;margin:auto;display:flex;gap:4px;padding:9px 20px;align-items:center;justify-content:center}
+.department-nav a{font-size:11px;letter-spacing:.11em;text-transform:uppercase;color:#42392d;font-weight:600;padding:11px 15px;text-align:center;white-space:nowrap;transition:background .2s,color .2s}
+.department-nav a:hover,.department-nav a:focus-visible{background:#1d1a17;color:#e9cd92}
+.apparel-area{max-width:1280px;margin:0 auto;padding:76px 24px 88px}
+.apparel-heading{text-align:center;max-width:720px;margin:0 auto 36px}
+.apparel-heading h2{font:normal 43px Georgia,serif;color:#201d18;margin:10px 0 14px}
+.apparel-heading p{color:#746d60;line-height:1.8;font-size:14px;margin:0}
+.apparel-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.apparel-card{position:relative;min-height:320px;padding:36px 30px;background:linear-gradient(148deg,#201d19,#0d0d0d);color:#f6f0e6;border:1px solid #b99a5f;display:flex;flex-direction:column;scroll-margin-top:20px}
+.apparel-index{font-size:10px;letter-spacing:.2em;font-weight:600;color:#d2b579}
+.apparel-card h3{font:normal 33px Georgia,serif;margin:38px 0 15px;line-height:1.15;color:#f5eedf}
+.apparel-divider{height:1px;width:54px;background:#b99a5f;margin:0 0 18px}
+.apparel-card p{font-size:13px;color:#d2c9ba;line-height:1.7;margin:0 0 26px}
+.apparel-status{margin-top:auto;display:inline-block;align-self:flex-start;border:1px solid #b99a5f;padding:9px 14px;color:#e5cd9c;letter-spacing:.13em;font-size:10px;text-transform:uppercase}
+@media(max-width:730px){
+ .department-nav-inner{justify-content:flex-start;overflow-x:auto;scrollbar-width:thin;padding:7px 12px}
+ .department-nav a{font-size:10px;padding:12px 11px}
+ .apparel-area{padding:56px 14px 68px}
+ .apparel-heading h2{font-size:35px}
+ .apparel-grid{grid-template-columns:1fr;gap:14px}
+ .apparel-card{min-height:245px;padding:28px 25px}
+ .apparel-card h3{margin:24px 0 13px;font-size:30px}
+}
+
 </style></head><body>
 <div class="top">AURA BELLA SHOP · SELECCIÓN DE FRAGANCIAS · REPÚBLICA DOMINICANA</div>
 <nav class="nav"><div class="brand"><img class="brand-logo" src="/logo-aura-bella.jpg?v=2" alt="Logo de Aura Bella Shop" width="50" height="50"><div><h1>AURA BELLA SHOP</h1><small>PERFUMERÍA SELECTA</small></div></div><div class="navlinks"><a href="#catalogo">Catálogo</a><a href="#informacion">Información</a><a href="https://wa.me/18098992529?text=Hola%21%20Me%20gustar%C3%ADa%20recibir%20informaci%C3%B3n%20sobre%20los%20perfumes%20de%20Aura%20Bella%20Shop." target="_blank" rel="noopener">WhatsApp</a></div><div class="account-cart-nav"><button type="button" id="accountToggle" aria-label="Ingresar o crear cuenta">Mi cuenta</button><button type="button" id="cartToggle" aria-label="Ver mi carrito">Carrito <span id="cartCount" class="shop-count" aria-live="polite">0</span></button></div></nav>
+<nav class="department-nav" aria-label="Secciones de la tienda">
+  <div class="department-nav-inner">
+    <a href="#catalogo">Perfumes</a>
+    <a href="#ropa-hombre">Ropa de hombre</a>
+    <a href="#ropa-mujer">Ropa de mujer</a>
+    <a href="#ropa-ninos">Ropa de niños</a>
+  </div>
+</nav>
 <header class="hero"><div class="hero-inner"><div class="eyebrow">Colección especial · Noviembre 2026</div><h2>El arte de dejar<br>una impresión.</h2><a href="#catalogo">Explorar colección</a></div></header>
 <main class="wrap" id="catalogo"><div class="metrics"><div class="metric"><b id="metric-total">100</b><span>Fragancias</span></div><div class="metric"><b id="metric-arabes">40</b><span>Árabes</span></div><div class="metric"><b id="metric-disenador">30</b><span>Diseñador</span></div><div class="metric"><b id="metric-nicho">30</b><span>Nicho</span></div></div>
 <section class="section-intro"><div class="eyebrow">Descubre tu próximo aroma</div><h2>La colección</h2><div class="dash"></div><p>Filtra por categoría o público. Abre cada ficha para conocer sus características y solicita disponibilidad directamente por WhatsApp.</p></section>
 <div class="toolbar"><input id="q" aria-label="Buscar perfume" placeholder="Buscar perfume o marca..."><select id="cat" aria-label="Categoría"><option value="">Todas las categorías</option><option>Árabe</option><option>Diseñador</option><option>Nicho</option></select><select id="aud" aria-label="Público"><option value="">Hombre, mujer y unisex</option><option>Hombre</option><option>Mujer</option><option>Unisex</option></select><select id="order" aria-label="Orden"><option value="collection">Orden de colección</option><option value="name">Nombre A–Z</option></select></div><div class="count" id="count" aria-live="polite"></div><div class="grid" id="cards"></div>
-</main><section class="summary" id="informacion"><div class="summary-inner"><div><div class="eyebrow">Servicio personalizado</div><h2>Tu próximo perfume, a un mensaje.</h2><p>Aura Bella Shop atiende pedidos por encargo en República Dominicana. Los precios publicados corresponden a la lista de venta aprobada por la tienda. Consulta por WhatsApp la disponibilidad y el precio de las referencias pendientes antes de formalizar el pedido.</p></div><div><p><b>Información para tu compra</b></p><p>Explora las fichas de cada fragancia y consulta por WhatsApp su disponibilidad antes de realizar el pedido. Los datos pendientes de verificar se indican en cada producto.</p></div></div></section><div class="footer">© 2026 AURA BELLA SHOP · ELEGANCIA EN CADA DETALLE</div>
+</main>
+<section class="apparel-area" aria-labelledby="apparel-title">
+  <div class="apparel-heading">
+    <div class="eyebrow">Aura Bella Shop · Próximas colecciones</div>
+    <h2 id="apparel-title">Moda para cada estilo</h2>
+    <p>Estamos preparando nuestras colecciones de ropa. Las secciones permanecerán sin artículos ni precios hasta definir el sistema de precios de cada categoría.</p>
+  </div>
+  <div class="apparel-grid">
+    <section class="apparel-card" id="ropa-hombre" aria-labelledby="apparel-men-title">
+      <span class="apparel-index">01 · NUEVA SECCIÓN</span>
+      <h3 id="apparel-men-title">Ropa de hombre</h3>
+      <div class="apparel-divider" aria-hidden="true"></div>
+      <p>Catálogo en preparación. Todavía no hay productos ni precios publicados.</p>
+      <span class="apparel-status">Próximamente</span>
+    </section>
+    <section class="apparel-card" id="ropa-mujer" aria-labelledby="apparel-women-title">
+      <span class="apparel-index">02 · NUEVA SECCIÓN</span>
+      <h3 id="apparel-women-title">Ropa de mujer</h3>
+      <div class="apparel-divider" aria-hidden="true"></div>
+      <p>Catálogo en preparación. Todavía no hay productos ni precios publicados.</p>
+      <span class="apparel-status">Próximamente</span>
+    </section>
+    <section class="apparel-card" id="ropa-ninos" aria-labelledby="apparel-kids-title">
+      <span class="apparel-index">03 · NUEVA SECCIÓN</span>
+      <h3 id="apparel-kids-title">Ropa de niños</h3>
+      <div class="apparel-divider" aria-hidden="true"></div>
+      <p>Catálogo en preparación. Todavía no hay productos ni precios publicados.</p>
+      <span class="apparel-status">Próximamente</span>
+    </section>
+  </div>
+</section>
+<section class="summary" id="informacion"><div class="summary-inner"><div><div class="eyebrow">Servicio personalizado</div><h2>Tu próximo perfume, a un mensaje.</h2><p>Aura Bella Shop atiende pedidos por encargo en República Dominicana. Los precios publicados corresponden a la lista de venta aprobada por la tienda. Consulta por WhatsApp la disponibilidad y el precio de las referencias pendientes antes de formalizar el pedido.</p></div><div><p><b>Información para tu compra</b></p><p>Explora las fichas de cada fragancia y consulta por WhatsApp su disponibilidad antes de realizar el pedido. Los datos pendientes de verificar se indican en cada producto.</p></div></div></section><div class="footer">© 2026 AURA BELLA SHOP · ELEGANCIA EN CADA DETALLE</div>
 <div class="modal-overlay" id="overlay" role="presentation"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><button class="modal-close" id="close" aria-label="Cerrar ficha">×</button><div id="modalContent"></div></section></div>
 
 <script>
