@@ -87,7 +87,7 @@
    if(!things.length)return "";
    const products=things.reduce((sum,{row,quantity})=>sum+row.unit_price_rd*quantity,0);
    const shipping=things.reduce((sum,{row,quantity})=>sum+row.shipping_rd*quantity,0);
-   return '<section class="shein-cart-part"><h3 class="shein-cart-heading">Ropa SHEIN</h3>'+
+   return '<section class="shein-cart-part"><h3 class="shein-cart-heading">Ropa y moda</h3>'+
     (cartError?'<p role="alert" class="shop-warning">'+esc(cartError)+'</p>':"")+
     things.map(({row:r,quantity})=>'<div class="shein-cart-row"><img src="'+esc(safeUrl(r.image_url))+'" alt="'+esc(r.title)+'" onerror="this.onerror=null;this.src=\'/logo-aura-bella.jpg\'"><div>'+
       '<div class="shein-cart-item-title">'+esc(r.brand+' '+r.title)+'</div>'+
@@ -101,8 +101,11 @@
     '<div><span>🚚 Envío ('+cartCount()+' unidades × costo unitario)</span><strong>'+money(shipping)+'</strong></div>'+
     '<div class="grand-total"><span>Total ropa + envío</span><strong>'+money(products+shipping)+'</strong></div></div></section>';
  }
+
+ // One confirmation dialog for fashion, fragrances and mixed baskets.
  function message(things,perfumes){
-   const deliveryDays=Number(things[0]?.row?.lead_days||17);
+   const hasClothes=things.length>0,hasPerfumes=perfumes.length>0;
+   const deliveryDays=hasClothes?Number(things[0].row.lead_days||17):null;
    const text=["¡Hola, Aura Bella Shop! ✨","","Quiero realizar un pedido:",""];
    let productTotal=0,shipTotal=0,count=0;
    for(const {row:r,quantity:q} of things){
@@ -112,23 +115,29 @@
        "🔢 Cantidad: "+q,
        "💰 Precio del producto: "+money(r.unit_price_rd)+" por unidad",
        "🚚 Costo de envío: "+money(r.shipping_rd)+" × "+q+" = "+money(r.shipping_rd*q),
-       "💳 Total a pagar: "+money(r.total_rd*q),
+       "💳 Total de este artículo: "+money(r.total_rd*q),
        "🔗 Enlace: "+productLink(r),"");
    }
-   let perfumeTotal=0,pending=false;
+   let perfumeTotal=0,perfumePending=false;
    for(const {p,quantity:q} of perfumes){
-     text.push("🌸 Perfume: "+p.brand+" "+p.name+" × "+q+" — "+(p.price===null?"Consultar precio":money(p.price*q)));
-     if(p.price===null)pending=true;
+     text.push("🌸 Perfume: "+p.brand+" "+p.name+
+       " × "+q+" — "+(p.price===null?"Precio por confirmar":money(p.price*q)));
+     if(p.price===null)perfumePending=true;
      else perfumeTotal+=p.price*q;
    }
-   if(perfumes.length)text.push("Nota: envío y disponibilidad de perfumes por confirmar (no aplica el cargo SHEIN).","");
-   text.push("💰 Subtotal ropa: "+money(productTotal),
-     "🚚 Envío SHEIN ("+count+" unidades): "+money(shipTotal),
-     "💳 Total"+(pending?" parcial":"")+" a pagar: "+money(productTotal+shipTotal+perfumeTotal),
-     "",
-     "📦 He leído y acepto el plazo estimado de entrega de "+deliveryDays+" días y el costo de envío indicado.",
-     "",
-     "¡Me gustaría confirmar mi pedido!");
+   if(hasPerfumes)text.push("🚚 Envío, disponibilidad y plazo de perfumes: por confirmar antes de finalizar el pedido.","");
+   if(hasClothes){
+     text.push("💰 Subtotal de ropa: "+money(productTotal),
+       "🚚 Envío de ropa ("+count+" unidades): "+money(shipTotal));
+   }
+   if(hasPerfumes)text.push("🌸 Subtotal de perfumes con precio: "+money(perfumeTotal));
+   const knownTotal=productTotal+shipTotal+perfumeTotal;
+   text.push((hasPerfumes?"💳 Subtotal conocido (sin envío de perfumes): ":"💳 Total a pagar: ")+
+      (perfumePending&&knownTotal===0?"Por confirmar":money(knownTotal)),"");
+   if(hasClothes)text.push("📦 He leído y acepto el plazo estimado de entrega de "+
+     deliveryDays+" días para la ropa y su costo de envío indicado.");
+   if(hasPerfumes)text.push("🌸 He leído y acepto que el envío, el plazo y la disponibilidad de perfumes se confirmarán antes de finalizar mi pedido.");
+   text.push("","¡Me gustaría confirmar mi pedido!");
    return text.join("\n");
  }
  const consent=document.createElement("div");
@@ -137,40 +146,55 @@
   '<button type="button" class="shein-close" data-shein-back aria-label="Cerrar">×</button>'+
   '<h2 id="sheinConsentTitle">📦 INFORMACIÓN IMPORTANTE SOBRE TU PEDIDO</h2>'+
   '<p>¡Gracias por elegir Aura Bella Shop! ✨</p>'+
-  '<p>Nuestros productos SHEIN provienen directamente de los Estados Unidos. 🇺🇸</p>'+
-  '<p>Por este motivo, contamos con un tiempo estimado de entrega de <b><span id="sheinConsentDays">17</span> días</b>, durante el cual recibimos, preparamos, empaquetamos y coordinamos la entrega de tu pedido.</p>'+
-  '<p>🚚 <b>Costo de envío: <span id="sheinConsentShipping">RD$100</span> por producto.</b> El cargo se aplica por unidad, sin descuentos automáticos.</p>'+
+  '<p id="auraModaOrigin">Nuestros artículos de moda se gestionan desde Estados Unidos. 🇺🇸</p>'+
+  '<p id="auraModaDelivery">Por este motivo, contamos con un tiempo estimado de entrega de <b><span id="sheinConsentDays">17</span> días</b>, durante el cual recibimos, preparamos, empaquetamos y coordinamos la entrega de tu pedido.</p>'+
+  '<p id="auraModaShipping">🚚 <b>Costo de envío: <span id="sheinConsentShipping">RD$100</span> por artículo de ropa.</b> Se aplica por unidad, sin descuentos automáticos.</p>'+
+  '<p id="auraPerfumeDelivery" hidden>🌸 En el caso de las fragancias, confirmaremos la disponibilidad, el plazo de entrega y el costo de envío por WhatsApp antes de finalizar el pedido.</p>'+
   '<p>Agradecemos tu confianza y comprensión.</p>'+
   '<p><b>Aura Bella Shop — Elegancia en cada detalle. ✨</b></p>'+
   '<div id="sheinConsentSummary" class="shein-summary"></div>'+
-  '<label class="shein-check-row"><input type="checkbox" id="sheinAccept"><span>He leído y acepto el plazo estimado de entrega de <span id="sheinConsentDaysCheck">17</span> días y el costo de envío indicado de <span id="sheinConsentShippingCheck">RD$100</span> por cada unidad SHEIN.</span></label>'+
+  '<label class="shein-check-row"><input type="checkbox" id="sheinAccept"><span id="auraOrderTerms">He leído y acepto las condiciones de mi pedido.</span></label>'+
   '<div class="shein-dialog-actions"><button type="button" class="shein-back" data-shein-back>Volver a la tienda</button>'+
   '<button type="button" class="shein-confirm" id="sheinGoWhatsapp" disabled>Aceptar y continuar a WhatsApp</button></div></section>';
  document.body.appendChild(consent);
- let wasOpen=false;
  function closeConsent(){
-  consent.classList.remove("is-open");consent.setAttribute("aria-hidden","true");
-  document.body.style.overflow=document.getElementById("cartLayer")?.classList.contains("is-open")?"hidden":"";
-  currentOrder=null;
+   consent.classList.remove("is-open");consent.setAttribute("aria-hidden","true");
+   const cartOpen=document.getElementById("cartLayer")?.classList.contains("is-open");
+   const fragranceOpen=document.getElementById("overlay")?.classList.contains("open");
+   document.body.style.overflow=cartOpen||fragranceOpen?"hidden":"";
+   currentOrder=null;
  }
- function openConsent(things,perfumes=[]){
-   if(!things.length)return;
-   // Each public listing is verified for the announced shipping route, delivery estimate and rights.
+ function openConsent(things=[],perfumes=[]){
+   if(!things.length&&!perfumes.length)return;
+   const hasClothes=things.length>0,hasPerfumes=perfumes.length>0;
    const shipping=things.reduce((n,i)=>n+i.row.shipping_rd*i.quantity,0);
    const products=things.reduce((n,i)=>n+i.row.unit_price_rd*i.quantity,0);
    const pricePerf=perfumes.reduce((n,i)=>n+(i.p.price||0)*i.quantity,0);
    const count=things.reduce((n,i)=>n+i.quantity,0);
-   const unitShip=things[0].row.shipping_rd;
-   const deliveryDays=Number(things[0].row.lead_days||17);
-   document.getElementById("sheinConsentDays").textContent=String(deliveryDays);
-   document.getElementById("sheinConsentDaysCheck").textContent=String(deliveryDays);
-   document.getElementById("sheinConsentShipping").textContent=money(unitShip);
-   document.getElementById("sheinConsentShippingCheck").textContent=money(unitShip);
+   const unitShip=hasClothes?things[0].row.shipping_rd:0;
+   const deliveryDays=hasClothes?Number(things[0].row.lead_days||17):null;
+   for(const id of ["auraModaOrigin","auraModaDelivery","auraModaShipping"]){
+     document.getElementById(id).hidden=!hasClothes;
+   }
+   document.getElementById("auraPerfumeDelivery").hidden=!hasPerfumes;
+   if(hasClothes){
+     document.getElementById("sheinConsentDays").textContent=String(deliveryDays);
+     document.getElementById("sheinConsentShipping").textContent=money(unitShip);
+   }
+   const pending=perfumes.some(x=>x.p.price===null);
+   const knownTotal=products+shipping+pricePerf;
    const summary=document.getElementById("sheinConsentSummary");
-   summary.innerHTML='<div><span>Productos SHEIN</span><strong>'+money(products)+'</strong></div>'+
-    '<div><span>Envío ('+count+' unidades)</span><strong>'+money(shipping)+'</strong></div>'+
-    (perfumes.length?'<div><span>Perfumes con precio</span><strong>'+money(pricePerf)+'</strong></div>':"")+
-    '<div class="grand-total"><span>Total'+(perfumes.some(x=>x.p.price===null)?" parcial":"")+'</span><strong>'+money(products+shipping+pricePerf)+'</strong></div>';
+   summary.innerHTML=
+    (hasClothes?'<div><span>Artículos de moda</span><strong>'+money(products)+'</strong></div>'+
+     '<div><span>Envío de ropa ('+count+' unidades)</span><strong>'+money(shipping)+'</strong></div>':"")+
+    (hasPerfumes?'<div><span>Perfumes'+(pending?' (algunos por cotizar)':'')+'</span><strong>'+
+      (pending&&pricePerf===0?'Por confirmar':money(pricePerf))+'</strong></div>'+
+      '<div><span>Envío de perfumes</span><strong>Por confirmar</strong></div>':"")+
+    '<div class="grand-total"><span>'+(hasPerfumes?'Subtotal conocido (sin envío de perfumes)':'Total a pagar')+
+     '</span><strong>'+(pending&&knownTotal===0?'Por confirmar':money(knownTotal))+'</strong></div>';
+   document.getElementById("auraOrderTerms").textContent=
+      (hasClothes?"Acepto el plazo estimado de "+deliveryDays+" días para la ropa y su envío indicado. ":"")+
+      (hasPerfumes?"Acepto que el envío, la disponibilidad y el plazo de los perfumes se confirmarán por WhatsApp antes de finalizar.":"");
    currentOrder={things,perfumes};
    document.getElementById("sheinAccept").checked=false;
    document.getElementById("sheinGoWhatsapp").disabled=true;
@@ -179,6 +203,7 @@
    document.getElementById("sheinAccept").focus();
  }
  function checkoutCart(perfumeItems=[]){openConsent(cartItems(),perfumeItems);}
+ function orderPerfume(p){if(!p)return;openConsent([],[{p,quantity:1}]);}
  function orderOne(sku){
    const row=lookup.get(String(sku));
    if(!row)return;
@@ -305,5 +330,5 @@
  document.addEventListener("visibilitychange",()=>{
    if(!document.hidden&&Date.now()-lastLoaded>300000){catalogPromise=refreshCatalog().catch(e=>console.warn(e.message));}
  });
- window.auraApparel={setSession,getCartCount:cartCount,cartHtml,checkoutCart,orderOne,refreshCatalog};
+ window.auraApparel={setSession,getCartCount:cartCount,cartHtml,checkoutCart,orderPerfume,orderOne,refreshCatalog};
 })();
