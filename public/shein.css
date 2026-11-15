@@ -1,0 +1,72 @@
+
+/* Aura Bella Shop · módulo SHEIN. Aislado de la perfumería. */
+.apparel-heading{max-width:800px}
+.apparel-card{min-height:275px}
+.apparel-products{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:22px}
+.apparel-card:has(.apparel-products.has-items){grid-column:1/-1;background:#fff;color:#171511;border-color:#d1bb91;min-height:0}
+.apparel-card:has(.apparel-products.has-items) .apparel-index{color:#906e3a}
+.apparel-card:has(.apparel-products.has-items) h3{margin:18px 0;color:#1f1c16}
+.apparel-card:has(.apparel-products.has-items) .apparel-status,.apparel-card:has(.apparel-products.has-items) .apparel-empty{display:none}
+.shein-item{min-width:0;border:1px solid #e4daca;background:#fff;color:#221d19;display:flex;flex-direction:column;overflow:hidden}
+.shein-photo{width:100%;height:250px;object-fit:contain;background:#f7f3eb;padding:14px}
+.shein-detail{padding:20px;display:flex;flex-direction:column;gap:10px;flex:1}
+.shein-brand{color:#94764a;font-size:10px;text-transform:uppercase;letter-spacing:.17em;font-weight:700}
+.shein-name{font:normal 23px Georgia,serif;line-height:1.22;margin:0;color:#1c1a17}
+.shein-description{font-size:12px;line-height:1.6;margin:0;color:#756e62}
+.shein-variant-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.shein-field{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:600;color:#594d3c}
+.shein-field select{min-width:0;width:100%;background:#fff;color:#231f1b;border:1px solid #d4c7b2;padding:10px 7px;font-size:12px}
+.shein-numbers{border-top:1px solid #e3dbcf;padding-top:12px;margin-top:auto}
+.shein-unit{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;margin-bottom:6px}
+.shein-unit strong{font-size:18px;color:#181714}
+.shein-shipping{color:#654f2e;font-size:12px;margin:5px 0}
+.shein-total{font-size:13px;border-top:1px solid #e8dfd3;padding-top:8px;margin-top:8px;display:flex;align-items:center;justify-content:space-between}
+.shein-total strong{font-size:18px}
+.shein-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.shein-actions button{padding:12px 8px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;min-height:44px;border:1px solid #2a2319;background:#fff;color:#201e1a;cursor:pointer}
+.shein-actions button.shein-buy{background:#161511;color:#fff}
+.shein-actions button:hover{border-color:#aa8855}
+.shein-actions button:disabled{opacity:.5;cursor:not-allowed}
+.shein-status{font-size:12px;color:#866532;min-height:16px}
+.shein-cart-part{margin-top:18px;border-top:1px solid #dbd1bf;padding-top:18px}
+.shein-cart-heading{font:normal 24px Georgia,serif;margin:0 0 12px}
+.shein-cart-row{display:grid;grid-template-columns:62px 1fr;gap:12px;margin-bottom:14px;padding:12px 0;border-bottom:1px solid #e7e0d6}
+.shein-cart-row img{width:62px;height:78px;object-fit:contain;background:#f7f4ed}
+.shein-cart-item-title{font-size:13px;font-weight:700;color:#171511}
+.shein-cart-item-meta,.shein-cart-price{font-size:11px;color:#6b6050;line-height:1.7}
+.shein-cart-qty{display:flex;align-items:center;gap:10px;margin-top:8px}
+.shein-cart-qty button{width:30px;height:30px;background:#fff;border:1px solid #cdbb9d;color:#161511;cursor:pointer}
+.shein-cart-qty button:disabled{opacity:.4;cursor:wait}
+.shein-cart-qty .shein-remove{border:0;background:transparent;width:auto;font-size:11px;text-decoration:underline;color:#685641}
+.shein-summary{background:#f6f1e8;padding:14px;margin-top:12px}
+.shein-summary div{display:flex;justify-content:space-between;font-size:12px;gap:12px;margin:6px 0}
+.shein-summary .grand-total{font-weight:700;font-size:16px;border-top:1px solid #d6c6aa;padding-top:10px;margin-top:10px}
+.shein-checkout-button{display:block;background:#161511;color:white;width:100%;min-height:46px;border:0;padding:12px 15px;margin-top:14px;cursor:pointer;font-size:12px;letter-spacing:.05em}
+.shein-checkout-button:disabled{background:#a8a6a2;cursor:not-allowed}
+.shein-layer{position:fixed;inset:0;background:#000b;display:none;z-index:9000;overflow:auto;padding:18px}
+.shein-layer.is-open{display:flex;align-items:center;justify-content:center}
+.shein-dialog{width:min(100%,560px);max-height:calc(100vh - 36px);overflow:auto;background:#fff;color:#242018;border:1px solid #cfb477;padding:26px;box-shadow:0 30px 100px #0007}
+.shein-dialog h2{font:normal 28px Georgia,serif;margin:6px 0 18px}
+.shein-dialog p{line-height:1.6;font-size:14px}
+.shein-dialog .shein-close{float:right;background:none;border:0;font-size:27px;cursor:pointer}
+.shein-check-row{display:flex;gap:10px;font-size:13px;align-items:flex-start;background:#f8f3e8;padding:14px;margin:16px 0}
+.shein-check-row input{margin-top:3px;width:18px;height:18px;flex-shrink:0}
+.shein-dialog-actions{display:flex;gap:10px;margin-top:16px}
+.shein-dialog-actions button{flex:1;padding:14px 10px;min-height:46px;cursor:pointer}
+.shein-dialog-actions .shein-confirm{background:#191714;color:white;border:1px solid #191714}
+.shein-dialog-actions .shein-back{background:#fff;border:1px solid #ab946b;color:#191714}
+.shein-dialog-actions button:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:730px){
+  .apparel-grid{display:block}
+  .apparel-card{margin-bottom:16px}
+  .apparel-products{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .shein-detail{padding:11px;gap:7px}
+  .shein-photo{height:175px;padding:6px}
+  .shein-name{font-size:18px}
+  .shein-variant-grid{grid-template-columns:1fr}
+  .shein-actions{grid-template-columns:1fr}
+  .shein-unit strong,.shein-total strong{font-size:15px}
+  .shein-layer{padding:8px}
+  .shein-dialog{padding:18px;max-height:calc(100vh - 16px)}
+  .shein-dialog-actions{flex-direction:column}
+}
