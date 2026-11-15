@@ -159,6 +159,8 @@
    selectedPendingId=null;
    $("selectedPending").hidden=true;
    $("skuForm").reset();
+   $("approvedPhotoFile").value="";
+   $("approvedPhotoPreview").innerHTML="";
  }
 
  const reviewFile=$("sheinReviewFile");
@@ -211,6 +213,42 @@
       status("Fotografía guardada para revisión privada del artículo "+productId+". No está publicada en Aura Bella Shop.");
    }catch(err){status("No se pudo adjuntar la foto: "+(err?.message||"error de conexión"),true);}
    finally{selectedPhotoId=null;reviewFile.value="";}
+ });
+
+
+ $("uploadApprovedPhoto").addEventListener("click",async()=>{
+   const form=$("skuForm");
+   const id=String(form.elements.namedItem("source_product_id")?.value||"").trim();
+   const file=$("approvedPhotoFile").files?.[0];
+   if(!/^\d{1,25}$/.test(id)){
+     status("Primero elige «Verificar y publicar» en la lista de pendientes para seleccionar el producto.",true);return;
+   }
+   if(!file){status("Selecciona una foto propia o autorizada desde tu celular.",true);return;}
+   if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size>8388608||file.size<1){
+     status("La imagen debe ser JPG, PNG o WEBP, máximo 8 MB.",true);return;
+   }
+   if(!$("manual-image_rights_ok").checked){
+     status("Marca la confirmación de derechos de uso comercial antes de subir una imagen pública.",true);return;
+   }
+   if(!confirm("¿Confirmas que esta fotografía es tuya o que tienes autorización expresa para publicarla comercialmente en Aura Bella Shop? La foto será accesible públicamente."))return;
+   const extension=({"image/jpeg":"jpg","image/png":"png","image/webp":"webp"})[file.type];
+   const path=id+"/"+crypto.randomUUID()+"."+extension;
+   const button=$("uploadApprovedPhoto");
+   button.disabled=true;status("Subiendo fotografía autorizada…");
+   try{
+      const {error}=await client.storage.from("shein-approved").upload(path,file,{upsert:false,contentType:file.type});
+      if(error)throw error;
+      const {data}=client.storage.from("shein-approved").getPublicUrl(path);
+      const url=data?.publicUrl||"";
+      if(!/^https:\/\/[a-z0-9.-]+\/storage\/v1\/object\/public\/shein-approved\//i.test(url)){
+         throw Error("No se pudo crear un vínculo público de la imagen.");
+      }
+      form.elements.namedItem("image_url").value=url;
+      const display=$("approvedPhotoPreview");
+      display.innerHTML='<img src="'+esc(url)+'" alt="Vista previa de imagen autorizada" style="max-width:220px;max-height:260px;object-fit:contain;border:1px solid #ddc8a2;display:block"><p class="hint">Fotografía cargada. El enlace ya está colocado en el formulario. Pulsa «Verificar y publicar» cuando completes todas las comprobaciones restantes.</p>';
+      status("Imagen autorizada cargada. Finaliza la verificación del producto para publicarlo.");
+   }catch(err){status("No se pudo cargar la foto: "+(err?.message||"error"),true);}
+   finally{button.disabled=false;}
  });
 
  $("clearProductForm").addEventListener("click",resetSelection);
