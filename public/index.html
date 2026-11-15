@@ -110,4 +110,4 @@ function closeFicha(){$('overlay').classList.remove('open');document.body.style.
 ['q','cat','aud','order'].forEach(x=>$(x).addEventListener(x==='q'?'input':'change',render));
 $('cards').addEventListener('click',e=>{const b=e.target.closest('[data-ficha]');if(b)openFicha(Number(b.dataset.ficha))});
 $('close').addEventListener('click',closeFicha);$('overlay').addEventListener('click',e=>{if(e.target===$('overlay'))closeFicha()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeFicha()});render();
-</script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="auth-config.js"></script><script src="shop.js?v=shein1"></script><script src="/shein.js?v=shein9"></script><script src="auth.js?v=shein1"></script></body></html>
+</script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="auth-config.js"></script><script src="shop.js?v=shein1"></script><script src="/shein.js?v=shein15"></script><script src="auth.js?v=shein1"></script></body></html>
