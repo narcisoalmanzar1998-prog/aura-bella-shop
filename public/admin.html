@@ -64,11 +64,51 @@
 <body>
 <header class="head"><div class="brand"><img src="/logo-aura-bella.jpg" alt="Aura Bella Shop"><span>AURA BELLA SHOP<br><small>PANEL PRIVADO</small></span></div><a href="/">Volver a la tienda</a></header>
 <main>
- <div class="eyebrow">Gestión de productos SHEIN</div>
- <h1>Administración de ropa</h1>
+ <div class="eyebrow">Gestión de productos · SHEIN y Amazon</div>
+ <h1>Administración de ropa y perfumes</h1>
  <p>Precios calculados automáticamente; costos en USD reservados a la administración. Acceso restringido con autenticación en dos factores.</p>
  <div id="adminGate" class="gate" role="status">Verificando tu acceso seguro…</div>
  <div id="adminArea" hidden>
+<section class="card" id="amazonAdmin" aria-labelledby="amazonTitle">
+<h2 id="amazonTitle">Perfumes · Amazon Estados Unidos</h2>
+<p>Gestión independiente de SHEIN. Categorías: <b>Árabes, Nicho y Diseñador</b>. Solo se muestran precios finales en RD$ en la tienda. Los precios de Amazon, tasas y márgenes son privados.</p>
+<div class="tiles"><div class="tile" style="grid-column:1/-1"><strong id="amazonStats">Cargando…</strong><span>Inventario de perfumes Amazon</span></div></div>
+<h2>Agregar enlaces de Amazon por lote</h2>
+<label class="field">Enlaces Amazon.com (uno por línea; hasta 50)<textarea id="amazonLinks" rows="4" placeholder="https://www.amazon.com/dp/B012345678"></textarea></label>
+<div class="fields">
+<label class="field">Categoría comprobada<select id="amazonBulkCategory"><option value="">Seleccionar después de verificar</option><option>Árabe</option><option>Nicho</option><option>Diseñador</option></select></label>
+<label class="field">Público<select id="amazonBulkAudience"><option>Unisex</option><option>Hombre</option><option>Mujer</option></select></label>
+</div><div class="buttons"><button type="button" id="amazonAnalyze" class="light">Analizar enlaces</button><button type="button" id="amazonImport">Guardar enlaces pendientes</button></div>
+<div id="amazonAnalysis"></div>
+<p class="hint">El enlace permite identificar el ASIN y evitar duplicados. La marca, variante, precio y disponibilidad deben verificarse directamente en Amazon antes de publicar. No se inventan datos ni se extraen precios de resultados de búsqueda.</p>
+<h2>Editar, verificar y publicar perfumes</h2>
+<form id="amazonForm"><input type="hidden" name="id" id="amazonId">
+<div class="fields">
+<label class="field">Enlace Amazon.com<input name="amazon_url" type="url" required placeholder="https://www.amazon.com/dp/XXXXXXXXXX"></label>
+<label class="field">Categoría confirmada<select name="category" required><option value="">Seleccionar</option><option>Árabe</option><option>Nicho</option><option>Diseñador</option></select></label>
+<label class="field">Público<select name="audience"><option>Unisex</option><option>Hombre</option><option>Mujer</option></select></label>
+<label class="field">Marca<input name="brand" required></label>
+<label class="field">Nombre exacto<input name="name" required></label>
+<label class="field">Concentración (EDP, EDT, etc.)<input name="concentration" required></label>
+<label class="field">Tamaño en ml<input name="size_ml" type="number" min="0.1" step="0.1" required></label>
+<label class="field">Variante y presentación<input name="variant"></label>
+<label class="field">Imagen autorizada (URL HTTPS)<input name="image_url" type="url"></label>
+<label class="field">Oferta vigente Amazon (US$, solo privada)<input name="cost_usd" type="number" min="0.01" step="0.01"></label>
+<label class="field">Vendedor<input name="seller"></label>
+<label class="field">Gestión logística (Amazon / vendedor)<input name="fulfillment"></label>
+<label class="field">Fecha y hora verificadas<input name="verified_at" type="datetime-local" id="amazonVerified"></label>
+<label class="field">Descripción<input name="description"></label>
+</div>
+<div class="checks"><label><input type="checkbox" id="amazonAvailable" name="available"> Confirmo que marca, concentración, tamaño, presentación, oferta vigente y disponibilidad coinciden exactamente en Amazon.</label></div>
+<p class="alert" id="amazonPreview">Sin precio confirmado</p>
+<div class="buttons"><button type="submit">Guardar ficha (queda pendiente)</button><button type="button" class="light" id="amazonClear">Nueva ficha / limpiar</button></div>
+</form>
+<p class="status" role="status" aria-live="polite" id="amazonStatus"></p>
+<h2>Inventario de perfumes Amazon</h2>
+<label class="field">Buscar perfume o ASIN<input id="amazonSearch" placeholder="Buscar por marca, nombre, ASIN o categoría"></label>
+<div class="table-scroll"><table><thead><tr><th>ASIN</th><th>Perfume</th><th>Categoría</th><th>Amazon (privado)</th><th>Venta RD$</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="amazonRows"></tbody></table></div>
+</section>
+
   <div class="tiles">
    <div class="tile"><strong id="adminCount">0</strong><span>Variantes registradas</span></div>
    <div class="tile"><strong id="adminReady">0</strong><span>Variantes listas para vender</span></div>
@@ -173,5 +213,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/auth-config.js"></script>
 <script src="/admin-shein.js?v=es18"></script>
+<script src="/admin-amazon.js?v=1"></script>
 </body>
 </html>
