@@ -114,5 +114,5 @@
   layer.addEventListener("click",e=>{if(e.target===layer)closeCart();});
   document.addEventListener("keydown",e=>{if(e.key==="Escape"&&layer.classList.contains("is-open"))closeCart();});
   updateBadge();
-  window.auraShop={setSession,openCart,add,waLink,cartMessage,productMessage,number:PHONE,refreshCart:()=>{updateBadge();render();}};
+  window.auraShop={setSession,openCart,add,waLink,cartMessage,productMessage,number:PHONE,refreshCart:()=>{updateBadge();render();},refreshCatalog:()=>{for(const p of catalog)byId.set(Number(p.id),p);updateBadge();}};
 })();
